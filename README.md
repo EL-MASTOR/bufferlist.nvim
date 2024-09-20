@@ -1,4 +1,4 @@
-![bufferlist preview](https://drive.google.com/file/d/1-8cdepKypl7I4O6pPcKtvDftIUHP_59N/view?usp=drivesdk)
+![bufferlist preview](https://i.ibb.co/zbxwrXk/Screenshot-20240920-162143-com-termux.jpg)
 ## Features
  - Manage buffers (**list, switch, save, delete**)
  - Super lightweight (**all the code is in a single file with less than 200 lines of code**)
