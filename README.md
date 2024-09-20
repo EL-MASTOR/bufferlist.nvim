@@ -17,15 +17,15 @@ Install the plugin with your preferred package manager:
 
 ```lua
 {
- "EL_MASTOR/bufferlist.nvim",
-	lazy = true,
-	keys = { { "<Leader>b", desc = "Open bufferlist" } }, -- keymap to load the plugin, it should be the same as keymap.open_buflist
- dependencies = "nvim-tree/nvim-web-devicons",
-	opts = {
-      -- your configuration comes here
-      -- or leave it empty to use the default settings
-      -- refer to the configuration section below
-	},
+  "EL_MASTOR/bufferlist.nvim",
+  lazy = true,
+  keys = { { "<Leader>b", desc = "Open bufferlist" } }, -- keymap to load the plugin, it should be the same as keymap.open_buflist
+  dependencies = "nvim-tree/nvim-web-devicons",
+  opts = {
+    -- your configuration comes here
+    -- or leave it empty to use the default settings
+    -- refer to the configuration section below
+  },
 }
 ```
 ### [packer](https://github.com/wbthomason/packer.nvim)
@@ -52,14 +52,14 @@ Bufferlist comes with the following defaults:
 
 ```lua
 {
-	keymap = {
-		open_bufferlist = "<leader>b",
-		close_buf_prefix = "c",
-		force_close_buf_prefix = "f",
-		save_buf = "s", 
-        close_bufferlist = "q" 
-	},
-	width = 40
+  keymap = {
+    open_bufferlist = "<leader>b",
+    close_buf_prefix = "c",
+    force_close_buf_prefix = "f",
+    save_buf = "s", 
+    close_bufferlist = "q" 
+  },
+  width = 40
 }
 ```
 ## Usage
