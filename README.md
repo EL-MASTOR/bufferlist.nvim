@@ -94,3 +94,8 @@ However it is still recommended to not remap them using `ctrl`, `alt`, `shift` a
 - `BufferListModifiedIcon`
 - `BufferListCloseIcon`
 - `BufferListLine`
+
+## Feedback
+
+- If you get an issue or come up with an awesome idea, don't hesitate to open an issue in github.
+- If you think this plugin is useful or cool, consider rewarding it a star.
