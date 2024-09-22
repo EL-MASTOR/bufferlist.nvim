@@ -7,7 +7,6 @@
  - buffer unsaved icon
  - Support for diagnostics
  - responsive height
- - Super lightweight. (**_all the code is in a single file with less than 200 lines of code_**)
 
 ## 📦 Installation
 
