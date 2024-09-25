@@ -16,7 +16,7 @@ Install the plugin with your preferred package manager:
 
 ```lua
 {
-  "EL_MASTOR/bufferlist.nvim",
+  "EL-MASTOR/bufferlist.nvim",
   lazy = true,
   keys = { { "<Leader>b", desc = "Open bufferlist" } }, -- keymap to load the plugin, it should be the same as keymap.open_buflist
   dependencies = "nvim-tree/nvim-web-devicons",
@@ -32,7 +32,7 @@ Install the plugin with your preferred package manager:
 ```lua
 -- Lua
 use {
-  "EL_MASTOR/bufferlist.nvim",
+  "EL-MASTOR/bufferlist.nvim",
   -- add a line for dependencies for devicons
   requires = {"nvim-tree/nvim-web-devicons"}
   config = function()
