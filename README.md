@@ -34,7 +34,7 @@ Install the plugin with your preferred package manager:
 use {
   "EL_MASTOR/bufferlist.nvim",
   -- add a line for dependencies for devicons
-  dependencies = {"nvim-tree/nvim-web-devicons"}
+  requires = {"nvim-tree/nvim-web-devicons"}
   config = function()
     require("bufferlist").setup {
       -- your configuration comes here
