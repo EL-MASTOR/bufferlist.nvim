@@ -1,69 +1,92 @@
--- TODO: add the ability to close multiple buffers at once
 local bufferlist = {}
 local api = vim.api
 local fn = vim.fn
 local km = vim.keymap
+local cmd = vim.cmd
+local bo = vim.bo
 local ns_id = api.nvim_create_namespace("BufferListNamespace")
 local _, devicons = pcall(require, "nvim-web-devicons")
+local signs = { "Error", "Warn", "Info", "Hint" }
 local defaut_opts = {
 	keymap = {
 		open_bufferlist = "<leader>b",
 		close_buf_prefix = "c",
 		force_close_buf_prefix = "f",
 		save_buf = "s",
+		multi_close_buf = "m",
+		multi_save_buf = "w",
 		close_bufferlist = "q",
 	},
 	width = 40,
+	prompt = "",
 }
-
-local signs = { "Error", "Warn", "Info", "Hint" }
 
 local function diagnosis(buffer)
 	local count = vim.diagnostic.count(buffer)
 	local diagnosis_display = {}
 	for k, v in pairs(count) do
-		table.insert(diagnosis_display, {
-			tostring(v) .. vim.fn.sign_getdefined("DiagnosticSign" .. signs[k])[1].text,
-			"DiagnosticSign" .. signs[k],
-		})
+		table.insert(diagnosis_display, { tostring(v) .. fn.sign_getdefined("DiagnosticSign" .. signs[k])[1].text, "DiagnosticSign" .. signs[k] })
 	end
 	return diagnosis_display
 end
 
-local function save_or_close_icon(buffer)
-	if vim.bo[buffer].modified then
-		return "󰝥 ▎"
-	else
-		return "󱎘 ▎"
-	end
-end
-
-local function switch_buffer(listed_bufs, index)
-	vim.cmd("quit")
-	vim.cmd("buffer " .. listed_bufs[index])
-end
-
-local function close_buffer(listed_bufs, index, current_buf_line, force)
-	local command = "bd"
-	if force then
-		command = command .. "!"
-	end
-	if index == current_buf_line then
-		api.nvim_buf_call(listed_bufs[index], function()
-			vim.cmd(command)
+local function close_buffer(listed_bufs, index, force)
+	local bn = listed_bufs[index]
+	local command = (force and "bd! " or "bd ") .. bn
+	cmd(command)
+	if fn.bufexists(bn) and bo[bn].buflisted then
+		api.nvim_buf_call(bn, function()
+			cmd(command)
 		end)
-	else
-		api.nvim_buf_delete(listed_bufs[index], { force = force })
 	end
 end
 
 local function save_buffer(listed_bufs, index, scratch_buffer)
 	api.nvim_buf_call(listed_bufs[index], function()
-		vim.cmd("w")
-		vim.bo[scratch_buffer].modifiable = true
+		cmd("w")
+		bo[scratch_buffer].modifiable = true
 		api.nvim_buf_set_text(scratch_buffer, index - 1, 0, index - 1, 4, { "" })
-		vim.bo[scratch_buffer].modifiable = false
+		bo[scratch_buffer].modifiable = false
 		api.nvim_buf_add_highlight(scratch_buffer, ns_id, "BufferListCloseIcon", index - 1, 0, 6)
+	end)
+end
+
+local function prompt_hl(input)
+	local list = {}
+	local init = 1
+  if string.sub(input, 1, 1)=='!' then
+    table.insert(list, { 0, 1, "BufferListPromptForce" })
+    init = 2
+  end
+	while true do
+		local match = string.find(input, "(%d+)", init)
+		if match then
+			if match > init then
+				table.insert(list, { init - 1, match - 1, "BufferListPromptSeperator" })
+			end
+			table.insert(list, { match - 1, match, "BufferListPrompt" })
+			init = match + 1
+		else
+			if init <= #input then
+				table.insert(list, { init - 1, #input, "BufferListPromptSeperator" })
+			end
+			return list
+		end
+	end
+end
+
+local function save_or_close(write_or_close, listed_bufs, scratch_buffer)
+	vim.ui.input({ prompt = defaut_opts.prompt, highlight = prompt_hl }, function(input)
+		if input then
+			for buffer in string.gmatch(input, "%d+") do
+				local bn = listed_bufs[tonumber(buffer)]
+				if bn and fn.bufexists(bn) and bo[bn].buflisted then
+          if not scratch_buf and string.sub(input, 1, 1) ~= "!" and bo[bn].modified then goto continue end
+					write_or_close(listed_bufs, tonumber(buffer), scratch_buffer and scratch_buffer or string.sub(input, 1, 1) == "!")
+				end
+			    ::continue::
+			end
+		end
 	end)
 end
 
@@ -76,20 +99,22 @@ local function list_buffers()
 	local icon_colors = {}
 	local diagnostics = {}
 	local listed_bufs = {}
+
+	local function refresh()
+		cmd("quit")
+		list_buffers()
+	end
+
 	for i = 1, #b do
-		if vim.bo[b[i]].buflisted then
+		if bo[b[i]].buflisted then
 			local bufname = vim.fs.basename(fn.bufname(b[i]))
 			local icon, color = devicons.get_icon_color(bufname)
 			icon = icon or ""
-			if bufname == "" then
-				bufname = "[No Name]"
-			end
-			local line = save_or_close_icon(b[i]) .. icon .. " " .. bufname
+			bufname = bufname == "" and "[No Name]" or bufname
+			local line = (bo[b[i]].modified and "󰝥 ▎" or "󱎘 ▎") .. icon .. " " .. bufname
 			table.insert(bufs_names, line)
 			table.insert(listed_bufs, b[i])
-			if b[i] == current_buf then
-				current_buf_line = #bufs_names
-			end
+			current_buf_line = b[i] == current_buf and #bufs_names or current_buf_line
 			table.insert(icon_colors, color)
 
 			local diagnosis_count = diagnosis(b[i])
@@ -100,21 +125,19 @@ local function list_buffers()
 			local len = #bufs_names
 
 			km.set("n", tostring(len), function()
-				switch_buffer(listed_bufs, len)
-			end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. listed_bufs[len] })
+				cmd("quit | buffer " .. listed_bufs[len])
+			end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. icon .. " " .. bufname })
 
 			km.set("n", defaut_opts.keymap.close_buf_prefix .. tostring(len), function()
-				if not vim.bo[listed_bufs[len]].modified then
-					close_buffer(listed_bufs, len, current_buf_line)
-					vim.cmd("quit")
-					list_buffers()
+				if not bo[listed_bufs[len]].modified then
+					close_buffer(listed_bufs, len)
+					refresh()
 				end
 			end, { buffer = scratch_buf, desc = "BufferList: close buffer: " .. listed_bufs[len] })
 
 			km.set("n", defaut_opts.keymap.force_close_buf_prefix .. tostring(len), function()
-				close_buffer(listed_bufs, len, current_buf_line, true)
-				vim.cmd("quit")
-				list_buffers()
+				close_buffer(listed_bufs, len, true)
+				refresh()
 			end, { buffer = scratch_buf, desc = "BufferList: force close buffer: " .. listed_bufs[len] })
 
 			km.set("n", defaut_opts.keymap.save_buf .. tostring(len), function()
@@ -126,7 +149,7 @@ local function list_buffers()
 	api.nvim_buf_set_lines(scratch_buf, 0, 1, true, bufs_names)
 
 	for i = 1, #bufs_names do
-		if vim.bo[listed_bufs[i]].modified then
+		if bo[listed_bufs[i]].modified then
 			api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListModifiedIcon", i - 1, 0, 5)
 		else
 			api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListCloseIcon", i - 1, 0, 5)
@@ -135,7 +158,7 @@ local function list_buffers()
 		if icon_colors[i] then
 			local hl_group = "BufferListIcon" .. tostring(i)
 			api.nvim_buf_add_highlight(scratch_buf, ns_id, hl_group, i - 1, 7, 12)
-			vim.cmd("hi " .. hl_group .. " guifg=" .. icon_colors[i])
+			cmd("hi " .. hl_group .. " guifg=" .. icon_colors[i])
 		end
 	end
 
@@ -164,7 +187,7 @@ local function list_buffers()
 	})
 
 	vim.wo[win].number = true
-	vim.bo[scratch_buf].modifiable = false
+	bo[scratch_buf].modifiable = false
 
 	api.nvim_create_autocmd("WinLeave", {
 		command = "bwipeout",
@@ -174,8 +197,19 @@ local function list_buffers()
 	})
 
 	km.set("n", defaut_opts.keymap.close_bufferlist, function()
-		vim.cmd("bwipeout")
+		cmd("bwipeout")
 	end, { buffer = scratch_buf, desc = "BufferList: exit" })
+
+	local function s_or_c(w_or_c, scratch_buffer)
+		save_or_close(w_or_c, listed_bufs, scratch_buffer)
+		refresh()
+	end
+
+	for _, v in ipairs({ { "multi_save_buf", save_buffer, scratch_buf, "BufferList: save multiple buffers" }, { "multi_close_buf", close_buffer, nil, "BufferList: close multiple buffers" }, }) do
+		km.set("n", defaut_opts.keymap[v[1]], function()
+			s_or_c(v[2], v[3])
+		end, { buffer = scratch_buf, desc = v[4] })
+	end
 end
 
 function bufferlist.setup(opts)
@@ -187,14 +221,11 @@ function bufferlist.setup(opts)
 	end
 
 	defaut_opts.width = opts.width or defaut_opts.width
+	defaut_opts.prompt = opts.prompt or defaut_opts.prompt
 
-	km.set("n", defaut_opts.keymap.open_bufferlist, function()
-		list_buffers()
-	end, { desc = "Open BufferList" })
+	km.set("n", defaut_opts.keymap.open_bufferlist, function() list_buffers() end, { desc = "Open BufferList" })
 
-	vim.cmd([[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold]])
-	vim.cmd([[hi BufferListModifiedIcon guifg=#8ec07c gui=bold]])
-	vim.cmd([[hi BufferListCloseIcon guifg=#fb4934 gui=bold]])
-	vim.cmd([[hi BufferListLine guifg=#fabd2f gui=bold]])
+	vim.cmd([[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPrompt guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold]])
 end
 return bufferlist
+-- still less than 200 lines of code because of 2%d lines of nothing 😑

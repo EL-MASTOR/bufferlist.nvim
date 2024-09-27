@@ -1,6 +1,6 @@
 ![bufferlist preview](https://i.ibb.co/zbxwrXk/Screenshot-20240920-162143-com-termux.jpg)
 ## Features
- - Manage buffers (**list, switch, save, delete**)
+ - Manage buffers (**list, switch, save, delete, multi-(save,delete)**)
  - Super lightweight (**all the code is in a single file with less than 200 lines of code**)
  - Super fast, (*since the code base is very small*) 
  - Super easy to use, (**_you can list, switch and manage buffers with as few key strokes as possible_**)
@@ -57,9 +57,12 @@ Bufferlist comes with the following defaults:
     close_buf_prefix = "c",
     force_close_buf_prefix = "f",
     save_buf = "s", 
+    multi_close_buf = "m",
+    multi_save_buf = "w",
     close_bufferlist = "q" 
   },
-  width = 40
+  width = 40,
+  prompt = "", -- for multi_{close,save}_buf prompt
 }
 ```
 ## Usage
@@ -82,6 +85,16 @@ Press `c<line_number>`. (**_doesn't work when the buffer has unsaved changes_**)
 Pressing `f<line_number>` will close the buffer even if it contains unsaved changes
 ### Closing buffer list window
 Press `keymap.close_bufferlist` or just leave the bufferlist window
+### Closing multiple buffers
+Press `keymap.multi_close_buf` to show a prompt, and then enter the `<line_number>`s of all the buffers you want to close, seperated by a seperator. The seperator should be any non-digit character, and there is no limit to the length or the kind of characters used in the seperator as long as it's not digit. But I recommend you to use either a space or a comma since it's the most natural, I also recommend you to use only one character to keep it at one keystroke
+>❗️Make sure that the first character isn't `!`.
+>❗️If you specified an unsaved buffer, it is ignored.
+>If a `<line_number>` you specified doesn't exist in the bufferlist window line numbers, it is ignored.
+### Force closing multiple buffers
+Press `keymap.multi_close_buf` and then enter `!` at the very beginning of the prompt, and then carry on with the rest of the steps already described in [Closing multiple buffers](#closing-multiple-buffers)
+>❗️Make sure that `!` is the very first character in the prompt, it shouldn't be preceded by anything, otherwise it would behave just like [Closing multiple buffers](#closing-multiple-buffers)
+### Saving buffers
+Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buffers you want to save seperated by a seperator. The seperator has the same characteristics described in [Closing multiple buffers](#closing-multiple-buffers)
 
 >❗️📑📒 **_Note:_** _[timeout](https://neovim.io/doc/user/options.html#'timeout') between `<perfix>` and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen') (*which by default is set to 1000ms*).
 >You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work.
@@ -94,6 +107,9 @@ However it is still recommended to not remap them using `ctrl`, `alt`, `shift` a
 - `BufferListModifiedIcon`
 - `BufferListCloseIcon`
 - `BufferListLine`
+- `BufferListPrompt`
+- `BufferListPromptSeperator`
+- `BufferListPromptForce`
 
 ## Feedback
 
