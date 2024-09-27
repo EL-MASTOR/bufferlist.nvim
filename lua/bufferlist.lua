@@ -124,9 +124,7 @@ local function list_buffers()
 
 			local len = #bufs_names
 
-			km.set("n", tostring(len), function()
-				cmd("quit | buffer " .. listed_bufs[len])
-			end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. icon .. " " .. bufname })
+			km.set("n", tostring(len), function() cmd("quit | buffer " .. listed_bufs[len]) end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. icon .. " " .. bufname })
 
 			km.set("n", defaut_opts.keymap.close_buf_prefix .. tostring(len), function()
 				if not bo[listed_bufs[len]].modified then
@@ -140,9 +138,7 @@ local function list_buffers()
 				refresh()
 			end, { buffer = scratch_buf, desc = "BufferList: force close buffer: " .. listed_bufs[len] })
 
-			km.set("n", defaut_opts.keymap.save_buf .. tostring(len), function()
-				save_buffer(listed_bufs, len, scratch_buf)
-			end, { buffer = scratch_buf, desc = "BufferList: save buffer: " .. listed_bufs[len] })
+			km.set("n", defaut_opts.keymap.save_buf .. tostring(len), function() save_buffer(listed_bufs, len, scratch_buf) end, { buffer = scratch_buf, desc = "BufferList: save buffer: " .. listed_bufs[len] })
 		end
 	end
 
