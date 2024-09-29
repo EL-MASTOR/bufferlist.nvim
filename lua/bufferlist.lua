@@ -19,6 +19,7 @@ local defaut_opts = {
 	},
 	width = 40,
 	prompt = "",
+	save_prompt = "󰆓 ",
 }
 
 local function diagnosis(buffer)
@@ -76,19 +77,20 @@ local function prompt_hl(input)
 end
 
 local function save_or_close(write_or_close, listed_bufs, scratch_buffer)
-	vim.ui.input({ prompt = defaut_opts.prompt, highlight = prompt_hl }, function(input)
-		if input then
-			for buffer in string.gmatch(input, "%d+") do
-				local bn = listed_bufs[tonumber(buffer)]
-				if bn and fn.bufexists(bn) and bo[bn].buflisted then
-					if not (not scratch_buffer and string.sub(input, 1, 1) ~= "!" and bo[bn].modified) then
-            -- stylua: ignore
-            write_or_close(listed_bufs, tonumber(buffer), scratch_buffer and scratch_buffer or string.sub(input, 1, 1) == "!")
+  -- stylua: ignore
+	vim.ui.input( { prompt = (scratch_buffer and defaut_opts.save_prompt or '') .. defaut_opts.prompt, highlight = prompt_hl }, function(input)
+			if input then
+				for buffer in string.gmatch(input, "%d+") do
+					local bn = listed_bufs[tonumber(buffer)]
+					if bn and fn.bufexists(bn) and bo[bn].buflisted then
+						if not (not scratch_buffer and string.sub(input, 1, 1) ~= "!" and bo[bn].modified) then
+              -- stylua: ignore
+              write_or_close(listed_bufs, tonumber(buffer), scratch_buffer and scratch_buffer or string.sub(input, 1, 1) == "!")
+						end
 					end
 				end
 			end
-		end
-	end)
+		end)
 end
 
 local function list_buffers()
@@ -222,6 +224,7 @@ function bufferlist.setup(opts)
 
 	defaut_opts.width = opts.width or defaut_opts.width
 	defaut_opts.prompt = opts.prompt or defaut_opts.prompt
+	defaut_opts.save_prompt = opts.save_prompt or defaut_opts.save_prompt
 
   -- stylua: ignore
 	km.set("n", defaut_opts.keymap.open_bufferlist, function() list_buffers() end, { desc = "Open BufferList" })
