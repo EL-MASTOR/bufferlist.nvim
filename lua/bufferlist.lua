@@ -25,6 +25,7 @@ local function diagnosis(buffer)
 	local count = vim.diagnostic.count(buffer)
 	local diagnosis_display = {}
 	for k, v in pairs(count) do
+    -- stylua: ignore
 		table.insert(diagnosis_display, { tostring(v) .. fn.sign_getdefined("DiagnosticSign" .. signs[k])[1].text, "DiagnosticSign" .. signs[k] })
 	end
 	return diagnosis_display
@@ -35,9 +36,8 @@ local function close_buffer(listed_bufs, index, force)
 	local command = (force and "bd! " or "bd ") .. bn
 	cmd(command)
 	if fn.bufexists(bn) and bo[bn].buflisted then
-		api.nvim_buf_call(bn, function()
-			cmd(command)
-		end)
+    -- stylua: ignore
+		api.nvim_buf_call(bn, function() cmd(command) end)
 	end
 end
 
@@ -54,10 +54,10 @@ end
 local function prompt_hl(input)
 	local list = {}
 	local init = 1
-  if string.sub(input, 1, 1)=='!' then
-    table.insert(list, { 0, 1, "BufferListPromptForce" })
-    init = 2
-  end
+	if string.sub(input, 1, 1) == "!" then
+		table.insert(list, { 0, 1, "BufferListPromptForce" })
+		init = 2
+	end
 	while true do
 		local match = string.find(input, "(%d+)", init)
 		if match then
@@ -81,10 +81,11 @@ local function save_or_close(write_or_close, listed_bufs, scratch_buffer)
 			for buffer in string.gmatch(input, "%d+") do
 				local bn = listed_bufs[tonumber(buffer)]
 				if bn and fn.bufexists(bn) and bo[bn].buflisted then
-          if not scratch_buf and string.sub(input, 1, 1) ~= "!" and bo[bn].modified then goto continue end
-					write_or_close(listed_bufs, tonumber(buffer), scratch_buffer and scratch_buffer or string.sub(input, 1, 1) == "!")
+					if not (not scratch_buffer and string.sub(input, 1, 1) ~= "!" and bo[bn].modified) then
+            -- stylua: ignore
+            write_or_close(listed_bufs, tonumber(buffer), scratch_buffer and scratch_buffer or string.sub(input, 1, 1) == "!")
+					end
 				end
-			    ::continue::
 			end
 		end
 	end)
@@ -124,6 +125,7 @@ local function list_buffers()
 
 			local len = #bufs_names
 
+      -- stylua: ignore
 			km.set("n", tostring(len), function() cmd("quit | buffer " .. listed_bufs[len]) end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. icon .. " " .. bufname })
 
 			km.set("n", defaut_opts.keymap.close_buf_prefix .. tostring(len), function()
@@ -138,6 +140,7 @@ local function list_buffers()
 				refresh()
 			end, { buffer = scratch_buf, desc = "BufferList: force close buffer: " .. listed_bufs[len] })
 
+      -- stylua: ignore
 			km.set("n", defaut_opts.keymap.save_buf .. tostring(len), function() save_buffer(listed_bufs, len, scratch_buf) end, { buffer = scratch_buf, desc = "BufferList: save buffer: " .. listed_bufs[len] })
 		end
 	end
@@ -201,6 +204,7 @@ local function list_buffers()
 		refresh()
 	end
 
+  -- stylua: ignore
 	for _, v in ipairs({ { "multi_save_buf", save_buffer, scratch_buf, "BufferList: save multiple buffers" }, { "multi_close_buf", close_buffer, nil, "BufferList: close multiple buffers" }, }) do
 		km.set("n", defaut_opts.keymap[v[1]], function()
 			s_or_c(v[2], v[3])
@@ -219,8 +223,10 @@ function bufferlist.setup(opts)
 	defaut_opts.width = opts.width or defaut_opts.width
 	defaut_opts.prompt = opts.prompt or defaut_opts.prompt
 
+  -- stylua: ignore
 	km.set("n", defaut_opts.keymap.open_bufferlist, function() list_buffers() end, { desc = "Open BufferList" })
 
+  -- stylua: ignore
 	vim.cmd([[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPrompt guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold]])
 end
 return bufferlist
