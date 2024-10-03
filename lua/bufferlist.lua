@@ -1,3 +1,4 @@
+-- TODO: add the ability to select buffers in the bl window as their line numbers get entered in the prompt like telescope
 local bufferlist = {}
 local api = vim.api
 local fn = vim.fn
@@ -34,9 +35,11 @@ end
 
 local function close_buffer(listed_bufs, index, force)
 	local bn = listed_bufs[index]
+  -- stylua: ignore
+	if bo[bn].buftype == "terminal" and not force then return nil end
 	local command = (force and "bd! " or "bd ") .. bn
 	cmd(command)
-	if fn.bufexists(bn) and bo[bn].buflisted then
+	if fn.bufexists(bn) == 1 and bo[bn].buflisted then
     -- stylua: ignore
 		api.nvim_buf_call(bn, function() cmd(command) end)
 	end
@@ -82,7 +85,7 @@ local function save_or_close(write_or_close, listed_bufs, scratch_buffer)
 			if input then
 				for buffer in string.gmatch(input, "%d+") do
 					local bn = listed_bufs[tonumber(buffer)]
-					if bn and fn.bufexists(bn) and bo[bn].buflisted then
+					if bn and fn.bufexists(bn) ==1 and bo[bn].buflisted then
 						if not (not scratch_buffer and string.sub(input, 1, 1) ~= "!" and bo[bn].modified) then
               -- stylua: ignore
               write_or_close(listed_bufs, tonumber(buffer), scratch_buffer and scratch_buffer or string.sub(input, 1, 1) == "!")
@@ -210,7 +213,7 @@ local function list_buffers()
 	for _, v in ipairs({ { "multi_save_buf", save_buffer, scratch_buf, "BufferList: save multiple buffers" }, { "multi_close_buf", close_buffer, nil, "BufferList: close multiple buffers" }, }) do
 		km.set("n", defaut_opts.keymap[v[1]], function()
 			s_or_c(v[2], v[3])
-		end, { buffer = scratch_buf, desc = v[4] })
+		end, { buffer = scratch_buf, desc = v[4], silent = true })
 	end
 end
 
@@ -233,4 +236,4 @@ function bufferlist.setup(opts)
 	vim.cmd([[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPrompt guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold]])
 end
 return bufferlist
--- still less than 200 lines of code because of 2%d lines of nothing 😑
+-- still less than 200 lines of code because of 4%d lines of nothing 😑

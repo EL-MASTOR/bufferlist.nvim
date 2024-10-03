@@ -1,12 +1,14 @@
+ <!-- TODO: add 0 to save everything-->
 ![bufferlist preview](https://i.ibb.co/zbxwrXk/Screenshot-20240920-162143-com-termux.jpg)
 ## Features
- - Manage buffers (**list, switch, save, delete, multi-(save,delete)**)
+ - Manage buffers (**list, switch, save, close, multi-(save,close)**)
  - Super lightweight (**all the code is in a single file with less than 200 lines of code**)
  - Super fast, (*since the code base is very small*) 
  - Super easy to use, (**_you can list, switch and manage buffers with as few key strokes as possible_**)
  - buffer unsaved icon
  - Support for diagnostics
- - responsive height
+ - Responsive height
+ - Not gluted with unessery features. (**_bufferlist comes only with features that you would use_**)
 
 ## 📦 Installation
 
@@ -105,10 +107,12 @@ Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buf
 
 >❗️📑📒 **_Note:_** _[timeout](https://neovim.io/doc/user/options.html#'timeout') between `<perfix>` and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen') (*which by default is set to 1000ms*).
 
->You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work.
+>❗️You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work.
 
 This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press *Esc* and try again quicker.
 However it is still recommended to not remap them using `ctrl`, `alt`, `shift` and `<leader>` keys since that will add more key strokes for you._
+
+>❗️📑📒 **_Note:_** _Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them
 
 >💡 **_Tip:_** _If you want additional mappings, you can checkout `:h buffer-list` for available vim commands for buffer management
 
