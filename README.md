@@ -77,7 +77,7 @@ Press `<leader>b` in normal mode
 
 ### Switching to an other buffer
 press the `<line_number>` of the buffer name you want to switch to (**very simple, isn't this the easiest**)
-> when the loaded buffers are 10 or more, you have to press the numbers quickly to get to the buffer who has 2 digits in `<line_number>`.
+> when the loaded buffers are 10 or more, you have to press the numbers quickly to get to the buffer that has 2 digits in `<line_number>`.
 > For example, if you have 15 loaded buffers that are displayed in the bufferlist window, and you want to get to the buffer whose `<line_number>` is 12, you need to press 1 and quickly press 2, if you're wait after pressing 1 you will go to the buffer in `<line_number>` 1 instead 
 
 ### Saving buffers
@@ -89,7 +89,7 @@ Pressing `f<line_number>` will close the buffer even if it contains unsaved chan
 ### Closing buffer list window
 Press `keymap.close_bufferlist` or just leave the bufferlist window
 ### Closing multiple buffers
-Press `keymap.multi_close_buf` to show a prompt, and then enter the `<line_number>`s of all the buffers you want to close, seperated by a seperator. The seperator should be any non-digit character, and there is no limit to the length or the kind of characters used in the seperator as long as it's not digit. But I recommend you to use either a space or a comma since it's the most natural, I also recommend you to use only one character to keep it at one keystroke
+Press `keymap.multi_close_buf` to show a prompt, and then enter the `<line_number>`s of all the buffers you want to close, seperated by a seperator. The seperator should be any non-digit character, and there is no limit to the length or the kind of characters used in the seperator as long as it's not digital. But I recommend you to use either a space or a comma since it's the most natural, I also recommend you to use only one character to keep it at one keystroke
 
 >❗️Make sure that the first character isn't `!`.
 
@@ -109,7 +109,7 @@ Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buf
 
 >❗️You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work.
 
-This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press *Esc* and try again quicker.
+>This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press *Esc* and try again quicker.
 However it is still recommended to not remap them using `ctrl`, `alt`, `shift` and `<leader>` keys since that will add more key strokes for you._
 
 >❗️📑📒 **_Note:_** _Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them
