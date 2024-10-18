@@ -23,7 +23,7 @@ Install the plugin with your preferred package manager:
 {
   "EL-MASTOR/bufferlist.nvim",
   lazy = true,
-  keys = { { "<Leader>b", desc = "Open bufferlist" } }, -- keymap to load the plugin, it should be the same as keymap.open_buflist
+  keys = { { "<Leader>b", desc = "Open bufferlist" } }, -- keymap to load the plugin, it should be the same as keymap.open_bufferlist
   dependencies = "nvim-tree/nvim-web-devicons",
   opts = {
     -- your configuration comes here
