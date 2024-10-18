@@ -9,6 +9,7 @@ local bo = vim.bo
 local ns_id = api.nvim_create_namespace("BufferListNamespace")
 local _, devicons = pcall(require, "nvim-web-devicons")
 local signs = { "Error", "Warn", "Info", "Hint" }
+local bufferlist_signs = { " ", " ", " ", " " }
 local defaut_opts = {
 	keymap = {
 		open_bufferlist = "<leader>b",
@@ -33,9 +34,11 @@ local function diagnosis(buffer)
 	local count = vim.diagnostic.count(buffer)
 	local diagnosis_display = {}
 	for k, v in pairs(count) do
+    local defined_sign = fn.sign_getdefined('DiagnosticSign'..signs[k])
+    local sign_icon = #defined_sign ~= 0 and defined_sign[1].text or bufferlist_signs[k]
 		table.insert(
 			diagnosis_display,
-			{ tostring(v) .. fn.sign_getdefined("DiagnosticSign" .. signs[k])[1].text, "DiagnosticSign" .. signs[k] }
+			{ tostring(v) .. sign_icon, "DiagnosticSign" .. signs[k] }
 		)
 	end
 	return diagnosis_display
