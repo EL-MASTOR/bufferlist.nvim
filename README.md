@@ -1,5 +1,5 @@
-![bufferlist preview](https://i.ibb.co/zbxwrXk/Screenshot-20240920-162143-com-termux.jpg)
-![bufferlist multi-save preview](https://imgur.com/a/XPclnC3)
+![bufferlist preview](https://i.imgur.com/pgVqpfN.jpeg)
+![bufferlist multi-save preview](https://i.imgur.com/5ujoFpe.jpeg)
 ## Features
  - Manage buffers (**list, switch, save, close, multi-(save,close)**)
  - Super lightweight (**all the code is in a single file**)
@@ -119,9 +119,8 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 >❗️📑📒 **_Note:_** _[timeout](https://neovim.io/doc/user/options.html#'timeout') between `<perfix>` and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen') (*which by default is set to 1000ms*).
 
 >❗️You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work.
-
-This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press *Esc* and try again quicker.
-However it is still recommended to not remap them using `ctrl`, `alt`, `shift` and `<leader>` keys since that will add more key strokes for you._
+>This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press *Esc* and try again quicker.
+>However it is still recommended to not remap them using `ctrl`, `alt`, `shift` and `<leader>` keys since that will add more key strokes for you._
 
 >❗️📑📒 **_Note:_** _Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them
 
