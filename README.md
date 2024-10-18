@@ -11,7 +11,7 @@
  - Buffer unsaved icon
  - Support for diagnostics
  - Responsive height
- - Not gluted with unessery features. (**_bufferlist comes only with features that you would use_**)
+ - Not gluted with unnecessary features. (**_bufferlist comes only with features that you would use_**)
 
 ## 📦 Installation
 
