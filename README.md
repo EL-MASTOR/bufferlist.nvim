@@ -25,6 +25,7 @@ Install the plugin with your preferred package manager:
   lazy = true,
   keys = { { "<Leader>b", desc = "Open bufferlist" } }, -- keymap to load the plugin, it should be the same as keymap.open_bufferlist
   dependencies = "nvim-tree/nvim-web-devicons",
+  cmd = { "BufferList" },
   opts = {
     -- your configuration comes here
     -- or leave it empty to use the default settings
@@ -129,6 +130,9 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 > You can also press `Ctrl_6` to go to the alternate buffer. This is already included in neovim so make sure to checkout the vim help for available cool buffer tricks, so you don't have to set it up if it's already there.
 
 >❗️📑📒 **_Note:_** _The buffers are listed in the same order as the buffer-list (`:buffers`)
+
+## User commands
+`BufferList`
 
 ## Highlight groops
 

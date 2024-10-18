@@ -313,6 +313,10 @@ function bufferlist.setup(opts)
 		list_buffers()
 	end, { desc = "Open BufferList" })
 
+  api.nvim_create_user_command("BufferList", function ()
+    list_buffers()
+  end, { desc = "Open BufferList" })
+
 	vim.cmd(
 		[[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPromptNumber guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 guibg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold | hi BufferListPromptMultiSelected guibg=#7c6f64 gui=bold]]
 	)
