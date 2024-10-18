@@ -1,4 +1,5 @@
--- TODO: add the ability to select buffers in the bl window as their line numbers get entered in the prompt like telescope
+-- TODO: add toggle relative path keymap
+-- WARN: bug: saving buffers not yet loaded when opening nvim with multiple file arguments
 local bufferlist = {}
 local api = vim.api
 local fn = vim.fn
@@ -16,32 +17,41 @@ local defaut_opts = {
 		save_buf = "s",
 		multi_close_buf = "m",
 		multi_save_buf = "w",
+		save_all_unsaved = "a",
+		close_all_saved = "d0",
 		close_bufferlist = "q",
 	},
 	width = 40,
 	prompt = "",
 	save_prompt = "󰆓 ",
+	top_prompt = true,
+	top_border = { "╭", "─", "╮", "│", "", "", "", "│" },
+	bottom_border = { "", "", "", "│", "╯", "─", "╰", "│" },
 }
 
 local function diagnosis(buffer)
 	local count = vim.diagnostic.count(buffer)
 	local diagnosis_display = {}
 	for k, v in pairs(count) do
-    -- stylua: ignore
-		table.insert(diagnosis_display, { tostring(v) .. fn.sign_getdefined("DiagnosticSign" .. signs[k])[1].text, "DiagnosticSign" .. signs[k] })
+		table.insert(
+			diagnosis_display,
+			{ tostring(v) .. fn.sign_getdefined("DiagnosticSign" .. signs[k])[1].text, "DiagnosticSign" .. signs[k] }
+		)
 	end
 	return diagnosis_display
 end
 
 local function close_buffer(listed_bufs, index, force)
 	local bn = listed_bufs[index]
-  -- stylua: ignore
-	if bo[bn].buftype == "terminal" and not force then return nil end
+	if bo[bn].buftype == "terminal" and not force then
+		return nil
+	end
 	local command = (force and "bd! " or "bd ") .. bn
 	cmd(command)
 	if fn.bufexists(bn) == 1 and bo[bn].buflisted then
-    -- stylua: ignore
-		api.nvim_buf_call(bn, function() cmd(command) end)
+		api.nvim_buf_call(bn, function()
+			cmd(command)
+		end)
 	end
 end
 
@@ -55,45 +65,96 @@ local function save_buffer(listed_bufs, index, scratch_buffer)
 	end)
 end
 
-local function prompt_hl(input)
-	local list = {}
-	local init = 1
-	if string.sub(input, 1, 1) == "!" then
-		table.insert(list, { 0, 1, "BufferListPromptForce" })
-		init = 2
+local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or_close, list_buffers_func)
+	local prompt_ns = api.nvim_create_namespace("BufferListPromptNamespace")
+	local prompt_scratch_buf = api.nvim_create_buf(false, true)
+	local line_numbers = {}
+	local buf_count = #listed_buffers
+	local border, row
+	if defaut_opts.top_prompt then
+		border = defaut_opts.top_border
+		row = -2
+	else
+		border = defaut_opts.bottom_border
+		row = height
 	end
-	while true do
-		local match = string.find(input, "(%d+)", init)
-		if match then
-			if match > init then
-				table.insert(list, { init - 1, match - 1, "BufferListPromptSeperator" })
-			end
-			table.insert(list, { match - 1, match, "BufferListPrompt" })
-			init = match + 1
-		else
-			if init <= #input then
-				table.insert(list, { init - 1, #input, "BufferListPromptSeperator" })
-			end
-			return list
-		end
-	end
-end
+	local prompt_win = api.nvim_open_win(prompt_scratch_buf, true, {
+		relative = "win",
+		win = win,
+		width = defaut_opts.width,
+		height = 1,
+		row = row,
+		col = -1,
+		border = border,
+		noautocmd = true,
+		style = "minimal",
+	})
+	vim.wo[prompt_win].statuscolumn = (save_or_close == "save" and defaut_opts.save_prompt or "") .. defaut_opts.prompt
+	cmd("startinsert")
 
-local function save_or_close(write_or_close, listed_bufs, scratch_buffer)
-  -- stylua: ignore
-	vim.ui.input( { prompt = (scratch_buffer and defaut_opts.save_prompt or '') .. defaut_opts.prompt, highlight = prompt_hl }, function(input)
-			if input then
-				for buffer in string.gmatch(input, "%d+") do
-					local bn = listed_bufs[tonumber(buffer)]
-					if bn and fn.bufexists(bn) ==1 and bo[bn].buflisted then
-						if not (not scratch_buffer and string.sub(input, 1, 1) ~= "!" and bo[bn].modified) then
-              -- stylua: ignore
-              write_or_close(listed_bufs, tonumber(buffer), scratch_buffer and scratch_buffer or string.sub(input, 1, 1) == "!")
-						end
+	api.nvim_create_autocmd("TextChangedI", {
+		buffer = prompt_scratch_buf,
+		callback = function()
+			local line = api.nvim_buf_get_lines(0, 0, -1, true)[1]
+			local curpos = fn.charcol(".")
+			local highlightgroup = curpos == 2 and string.sub(line, 1, 1) == "!" and "BufferListPromptForce"
+				or tonumber(string.sub(line, curpos - 1, curpos - 1)) and "BufferListPromptNumber"
+				or "BufferListPromptSeperator"
+			api.nvim_buf_add_highlight(
+				prompt_scratch_buf,
+				prompt_ns,
+				highlightgroup,
+				0,
+				curpos == 1 and 0 or curpos - 2,
+				curpos - 1
+			)
+			local recent_numbers = {}
+			for line_nr in string.gmatch(line, "%d+") do
+				if tonumber(line_nr) <= buf_count then
+					if not line_numbers[line_nr] then
+						local extid = api.nvim_buf_set_extmark(scratch_buffer, prompt_ns, tonumber(line_nr) - 1, 0, {
+							line_hl_group = "BufferListPromptMultiSelected",
+						})
+						line_numbers[line_nr] = extid
 					end
+					recent_numbers[line_nr] = true
 				end
 			end
-		end)
+			for key, value in pairs(line_numbers) do
+				if not recent_numbers[key] then
+					line_numbers[key] = nil
+					api.nvim_buf_del_extmark(scratch_buffer, prompt_ns, value)
+				end
+			end
+		end,
+	})
+
+	api.nvim_create_autocmd("InsertLeave", {
+		buffer = prompt_scratch_buf,
+		callback = function()
+			cmd("bwipeout")
+			api.nvim_buf_clear_namespace(scratch_buffer, prompt_ns, 0, -1)
+		end,
+	})
+
+	km.set("i", "<cr>", function()
+		for key in pairs(line_numbers) do
+			if save_or_close == "save" then
+				save_buffer(listed_buffers, tonumber(key), scratch_buffer)
+			elseif save_or_close == "close" then
+				local force = string.sub(api.nvim_buf_get_lines(0, 0, -1, true)[1], 1, 1) == "!"
+				if not force and bo[listed_buffers[tonumber(key)]].modified then
+					goto continue
+				end
+				close_buffer(listed_buffers, tonumber(key), force)
+			end
+			::continue::
+		end
+		cmd("stopinsert")
+		cmd("bwipeout " .. prompt_scratch_buf)
+		cmd("bwipeout " .. scratch_buffer)
+		list_buffers_func()
+	end, { buffer = prompt_scratch_buf })
 end
 
 local function list_buffers()
@@ -121,7 +182,7 @@ local function list_buffers()
 			table.insert(bufs_names, line)
 			table.insert(listed_bufs, b[i])
 			current_buf_line = b[i] == current_buf and #bufs_names or current_buf_line
-			table.insert(icon_colors, color)
+			table.insert(icon_colors, color or false)
 
 			local diagnosis_count = diagnosis(b[i])
 			if #diagnosis_count > 0 then
@@ -130,8 +191,9 @@ local function list_buffers()
 
 			local len = #bufs_names
 
-      -- stylua: ignore
-			km.set("n", tostring(len), function() cmd("quit | buffer " .. listed_bufs[len]) end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. icon .. " " .. bufname })
+			km.set("n", tostring(len), function()
+				cmd("quit | buffer " .. listed_bufs[len])
+			end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. icon .. " " .. bufname })
 
 			km.set("n", defaut_opts.keymap.close_buf_prefix .. tostring(len), function()
 				if not bo[listed_bufs[len]].modified then
@@ -145,8 +207,9 @@ local function list_buffers()
 				refresh()
 			end, { buffer = scratch_buf, desc = "BufferList: force close buffer: " .. listed_bufs[len] })
 
-      -- stylua: ignore
-			km.set("n", defaut_opts.keymap.save_buf .. tostring(len), function() save_buffer(listed_bufs, len, scratch_buf) end, { buffer = scratch_buf, desc = "BufferList: save buffer: " .. listed_bufs[len] })
+			km.set("n", defaut_opts.keymap.save_buf .. tostring(len), function()
+				save_buffer(listed_bufs, len, scratch_buf)
+			end, { buffer = scratch_buf, desc = "BufferList: save buffer: " .. listed_bufs[len] })
 		end
 	end
 
@@ -188,6 +251,7 @@ local function list_buffers()
 		title_pos = "center",
 		border = "rounded",
 		style = "minimal",
+		noautocmd = true,
 	})
 
 	vim.wo[win].number = true
@@ -204,36 +268,53 @@ local function list_buffers()
 		cmd("bwipeout")
 	end, { buffer = scratch_buf, desc = "BufferList: exit" })
 
-	local function s_or_c(w_or_c, scratch_buffer)
-		save_or_close(w_or_c, listed_bufs, scratch_buffer)
-		refresh()
+	for _, value in ipairs({
+		{ "multi_save_buf", "save", "BufferList: save multiple buffers" },
+		{ "multi_close_buf", "close", "BufferList: close multiple buffers" },
+	}) do
+		km.set("n", defaut_opts.keymap[value[1]], function()
+			float_prompt(win, height, listed_bufs, scratch_buf, value[2], list_buffers)
+		end, { buffer = scratch_buf, silent = true, desc = value[3] })
 	end
 
-  -- stylua: ignore
-	for _, v in ipairs({ { "multi_save_buf", save_buffer, scratch_buf, "BufferList: save multiple buffers" }, { "multi_close_buf", close_buffer, nil, "BufferList: close multiple buffers" }, }) do
-		km.set("n", defaut_opts.keymap[v[1]], function()
-			s_or_c(v[2], v[3])
-		end, { buffer = scratch_buf, desc = v[4], silent = true })
-	end
+	km.set("n", defaut_opts.keymap.save_all_unsaved, function()
+		for index = 1, #listed_bufs do
+			if bo[listed_bufs[index]].modified then
+				save_buffer(listed_bufs, index, scratch_buf)
+			end
+		end
+	end, { buffer = scratch_buf, silent = true, desc = "BufferList: save all buffers" })
+
+	km.set("n", defaut_opts.keymap.close_all_saved, function()
+		for index = 1, #listed_bufs do
+			if not bo[listed_bufs[index]].modified then
+				close_buffer(listed_bufs, index)
+			end
+		end
+		refresh()
+	end, { buffer = scratch_buf, silent = true, desc = "BufferList: close all saved buffers" })
 end
 
 function bufferlist.setup(opts)
 	opts = opts or {}
-	if opts.keymap then
-		for key, value in pairs(opts.keymap) do
-			defaut_opts.keymap[key] = value
+	for _, opt in ipairs({ "keymap", "top_border", "bottom_border" }) do
+		if opts[opt] then
+			for key, value in pairs(opts[opt]) do
+				defaut_opts[opt][key] = value
+			end
 		end
 	end
 
-	defaut_opts.width = opts.width or defaut_opts.width
-	defaut_opts.prompt = opts.prompt or defaut_opts.prompt
-	defaut_opts.save_prompt = opts.save_prompt or defaut_opts.save_prompt
+	for _, value in ipairs({'width','prompt', 'save_prompt','top_prompt'}) do
+    defaut_opts[value] = opts[value] or defaut_opts[value]
+	end
 
-  -- stylua: ignore
-	km.set("n", defaut_opts.keymap.open_bufferlist, function() list_buffers() end, { desc = "Open BufferList" })
+	km.set("n", defaut_opts.keymap.open_bufferlist, function()
+		list_buffers()
+	end, { desc = "Open BufferList" })
 
-  -- stylua: ignore
-	vim.cmd([[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPrompt guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold]])
+	vim.cmd(
+		[[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPromptNumber guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 guibg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold | hi BufferListPromptMultiSelected guibg=#7c6f64 gui=bold]]
+	)
 end
 return bufferlist
--- still less than 200 lines of code because of 4%d lines of nothing 😑
