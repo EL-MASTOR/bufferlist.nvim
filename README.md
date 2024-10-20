@@ -23,7 +23,7 @@ Install the plugin with your preferred package manager:
 {
   "EL-MASTOR/bufferlist.nvim",
   lazy = true,
-  keys = { { "<Leader>b", desc = "Open bufferlist" } }, -- keymap to load the plugin, it should be the same as keymap.open_bufferlist
+  keys = { { "<Leader>b", ':BufferList<CR>', desc = "Open bufferlist" } },
   dependencies = "nvim-tree/nvim-web-devicons",
   cmd = "BufferList",
   opts = {
@@ -59,7 +59,6 @@ Bufferlist comes with the following defaults:
 ```lua
 {
   keymap = {
-    open_bufferlist = "<leader>b",
     close_buf_prefix = "c",
     force_close_buf_prefix = "f",
     save_buf = "s", 
@@ -76,9 +75,6 @@ Bufferlist comes with the following defaults:
 }
 ```
 ## Usage
-### Open bufferlist
-Press `<leader>b` in normal mode
-
 ### **_The following key maps are buffer local key maps, they work only inside the bufferlist floating window_**
 >❗️📑📒 **_Note:_**_*`<line_number>` and `<prefix>` represent the line number of the buffer name, and the first key in the keymap respectively*_
 
@@ -125,11 +121,11 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 
 >❗️📑📒 **_Note:_** _Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them
 
->💡 **_Tip:_** _If you want additional mappings, you can checkout `:h buffer-list` for available vim commands for buffer management
-
-> You can also press `Ctrl_6` to go to the alternate buffer. This is already included in neovim so make sure to checkout the vim help for available cool buffer tricks, so you don't have to set it up if it's already there.
+>💡 **_Tip:_** _Does not provide keymappings for commands, or maps already builtin in nvim, (such as `:bnext`, `:bufdo`, `<Ctrl_6>`, ...). If you want additional mappings for buffer management and navigations, you can check out `:h buffer-list`, `:h editing`, `:h windows`, etc... .
 
 >❗️📑📒 **_Note:_** _The buffers are listed in the same order as the buffer-list (`:buffers`)
+
+>📑📒 **_Note:_** _Bufferlist will show icons in the virt text. If you have diagnostic icons defined (for example with `sign_defign`), bufferlist will show the latter instead.
 
 ## User commands
 `BufferList`

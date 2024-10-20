@@ -1,5 +1,5 @@
 -- TODO: add toggle relative path keymap
--- WARN: bug: saving buffers not yet loaded when opening nvim with multiple file arguments
+-- TODO: think about using letters instead of numbers when listing buffers
 local bufferlist = {}
 local api = vim.api
 local fn = vim.fn
@@ -12,7 +12,6 @@ local signs = { "Error", "Warn", "Info", "Hint" }
 local bufferlist_signs = { " ", " ", " ", " " }
 local defaut_opts = {
 	keymap = {
-		open_bufferlist = "<leader>b",
 		close_buf_prefix = "c",
 		force_close_buf_prefix = "f",
 		save_buf = "s",
@@ -59,13 +58,19 @@ local function close_buffer(listed_bufs, index, force)
 end
 
 local function save_buffer(listed_bufs, index, scratch_buffer)
-	api.nvim_buf_call(listed_bufs[index], function()
+  local save=function()
 		cmd("w")
 		bo[scratch_buffer].modifiable = true
 		api.nvim_buf_set_text(scratch_buffer, index - 1, 0, index - 1, 4, { "" })
 		bo[scratch_buffer].modifiable = false
 		api.nvim_buf_add_highlight(scratch_buffer, ns_id, "BufferListCloseIcon", index - 1, 0, 6)
-	end)
+	end
+  local status = pcall(api.nvim_buf_call, listed_bufs[index], save)
+  if not status then -- WARN: assumes state is a single boolean value. Though the docs say it returns the result of the function. But the tests show that it only consists of a single boolean value and no more.
+    vim.notify(fn.bufname(listed_bufs[index])..[[ is an empty buffer. Therefore it is not saved.
+This commonly happens when trying to save a buffer that is present in the argument list but not yet loaded. To load it you need to open the buffer by switching to it, or by using the argument list commands.
+See :h argument-list]], vim.log.levels.WARN)
+  end
 end
 
 local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or_close, list_buffers_func)
@@ -311,10 +316,6 @@ function bufferlist.setup(opts)
 	for _, value in ipairs({'width','prompt', 'save_prompt','top_prompt'}) do
     defaut_opts[value] = opts[value] or defaut_opts[value]
 	end
-
-	km.set("n", defaut_opts.keymap.open_bufferlist, function()
-		list_buffers()
-	end, { desc = "Open BufferList" })
 
   api.nvim_create_user_command("BufferList", function ()
     list_buffers()
