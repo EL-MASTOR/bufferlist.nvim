@@ -119,11 +119,13 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 >This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press *Esc* and try again quicker.
 >However it is still recommended to not remap them using `ctrl`, `alt`, `shift` and `<leader>` keys since that will add more key strokes for you._
 
->❗️📑📒 **_Note:_** _Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them
+>❗️📑📒 **_Note:_** _Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them.
 
 >💡 **_Tip:_** _Does not provide keymappings for commands, or maps already builtin in nvim, (such as `:bnext`, `:bufdo`, `<Ctrl_6>`, ...). If you want additional mappings for buffer management and navigations, you can check out `:h buffer-list`, `:h editing`, `:h windows`, etc... .
 
->❗️📑📒 **_Note:_** _The buffers are listed in the same order as the buffer-list (`:buffers`)
+>❗️📑📒 **_Note:_** _The buffers are listed in the same order as the buffer-list (`:buffers`).
+
+>❗️📑📒 **_Note:_** _Empty buffers are ignored while saving. (empty buffers usually occur when they are in the `argument-list` but not yet loaded).
 
 >📑📒 **_Note:_** _Bufferlist will show icons in the virt text. If you have diagnostic icons defined (for example with `sign_defign`), bufferlist will show the latter instead.
 
