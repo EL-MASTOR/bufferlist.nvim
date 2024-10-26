@@ -25,6 +25,8 @@ local defaut_opts = {
 	prompt = "",
 	save_prompt = "󰆓 ",
 	top_prompt = true,
+	win_keymaps = {},
+	bufs_keymaps = {},
 	top_border = { "╭", "─", "╮", "│", "", "", "", "│" },
 	bottom_border = { "", "", "", "│", "╯", "─", "╰", "│" },
 }
@@ -33,12 +35,9 @@ local function diagnosis(buffer)
 	local count = vim.diagnostic.count(buffer)
 	local diagnosis_display = {}
 	for k, v in pairs(count) do
-    local defined_sign = fn.sign_getdefined('DiagnosticSign'..signs[k])
-    local sign_icon = #defined_sign ~= 0 and defined_sign[1].text or bufferlist_signs[k]
-		table.insert(
-			diagnosis_display,
-			{ tostring(v) .. sign_icon, "DiagnosticSign" .. signs[k] }
-		)
+		local defined_sign = fn.sign_getdefined("DiagnosticSign" .. signs[k])
+		local sign_icon = #defined_sign ~= 0 and defined_sign[1].text or bufferlist_signs[k]
+		table.insert(diagnosis_display, { tostring(v) .. sign_icon, "DiagnosticSign" .. signs[k] })
 	end
 	return diagnosis_display
 end
@@ -58,7 +57,7 @@ local function close_buffer(listed_bufs, index, force)
 end
 
 local function save_buffer(listed_bufs, index, scratch_buffer)
-  pcall(api.nvim_buf_call, listed_bufs[index], function()
+	pcall(api.nvim_buf_call, listed_bufs[index], function()
 		cmd("w")
 		bo[scratch_buffer].modifiable = true
 		api.nvim_buf_set_text(scratch_buffer, index - 1, 0, index - 1, 4, { "" })
@@ -170,7 +169,7 @@ local function list_buffers()
 	local listed_bufs = {}
 
 	local function refresh()
-		cmd("quit")
+		cmd("bwipeout")
 		list_buffers()
 	end
 
@@ -192,26 +191,37 @@ local function list_buffers()
 			end
 
 			local len = #bufs_names
+			local desc_bufname = " " .. icon .. " " .. bufname
 
 			km.set("n", tostring(len), function()
-				cmd("quit | buffer " .. listed_bufs[len])
-			end, { buffer = scratch_buf, desc = "BufferList: switch to buffer: " .. icon .. " " .. bufname })
+				cmd("bwipeout | buffer " .. listed_bufs[len])
+			end, { buffer = scratch_buf, desc = "BufferList: switch to buffer:" .. desc_bufname })
 
 			km.set("n", defaut_opts.keymap.close_buf_prefix .. tostring(len), function()
 				if not bo[listed_bufs[len]].modified then
 					close_buffer(listed_bufs, len)
 					refresh()
 				end
-			end, { buffer = scratch_buf, desc = "BufferList: close buffer: " .. listed_bufs[len] })
+			end, { buffer = scratch_buf, desc = "BufferList: close buffer:" .. desc_bufname })
 
 			km.set("n", defaut_opts.keymap.force_close_buf_prefix .. tostring(len), function()
 				close_buffer(listed_bufs, len, true)
 				refresh()
-			end, { buffer = scratch_buf, desc = "BufferList: force close buffer: " .. listed_bufs[len] })
+			end, { buffer = scratch_buf, desc = "BufferList: force close buffer:" .. desc_bufname })
 
 			km.set("n", defaut_opts.keymap.save_buf .. tostring(len), function()
 				save_buffer(listed_bufs, len, scratch_buf)
-			end, { buffer = scratch_buf, desc = "BufferList: save buffer: " .. listed_bufs[len] })
+			end, { buffer = scratch_buf, desc = "BufferList: save buffer:" .. desc_bufname })
+
+			for index = 1, #defaut_opts.bufs_keymaps do
+				local bkm = vim.deepcopy(defaut_opts.bufs_keymaps[index], true)
+				local km_opts = bkm[3]
+				km_opts.buffer = scratch_buf
+				km_opts.desc = km_opts.desc and km_opts.desc .. desc_bufname
+				km.set("n", bkm[1] .. tostring(len), function()
+					bkm[2]({ bl_buf = scratch_buf, buffers = listed_bufs, line_number = len, open_bufferlist = list_buffers })
+				end, km_opts)
+			end
 		end
 	end
 
@@ -295,11 +305,20 @@ local function list_buffers()
 		end
 		refresh()
 	end, { buffer = scratch_buf, silent = true, desc = "BufferList: close all saved buffers" })
+
+	for index = 1, #defaut_opts.win_keymaps do
+		local wkm = defaut_opts.win_keymaps[index]
+		local km_opts = wkm[3]
+		km_opts.buffer = scratch_buf
+		km.set("n", wkm[1], function()
+			wkm[2]({ bl_buf = scratch_buf, buffers = listed_bufs, winid = win, open_bufferlist = list_buffers })
+		end, km_opts)
+	end
 end
 
 function bufferlist.setup(opts)
 	opts = opts or {}
-	for _, opt in ipairs({ "keymap", "top_border", "bottom_border" }) do
+	for _, opt in ipairs({ "keymap", "win_keymaps", "bufs_keymaps", "top_border", "bottom_border" }) do
 		if opts[opt] then
 			for key, value in pairs(opts[opt]) do
 				defaut_opts[opt][key] = value
@@ -307,13 +326,13 @@ function bufferlist.setup(opts)
 		end
 	end
 
-	for _, value in ipairs({'width','prompt', 'save_prompt','top_prompt'}) do
-    defaut_opts[value] = opts[value] or defaut_opts[value]
+	for _, value in ipairs({ "width", "prompt", "save_prompt", "top_prompt" }) do
+		defaut_opts[value] = opts[value] or defaut_opts[value]
 	end
 
-  api.nvim_create_user_command("BufferList", function ()
-    list_buffers()
-  end, { desc = "Open BufferList" })
+	api.nvim_create_user_command("BufferList", function()
+		list_buffers()
+	end, { desc = "Open BufferList" })
 
 	vim.cmd(
 		[[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPromptNumber guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 guibg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold | hi BufferListPromptMultiSelected guibg=#7c6f64 gui=bold]]

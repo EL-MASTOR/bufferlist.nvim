@@ -33,25 +33,6 @@ Install the plugin with your preferred package manager:
   },
 }
 ```
-### [packer](https://github.com/wbthomason/packer.nvim)
-
-```lua
--- Lua
-use {
-  "EL-MASTOR/bufferlist.nvim",
-  -- add a line for dependencies for devicons
-  requires = {"nvim-tree/nvim-web-devicons"}
-  config = function()
-    require("bufferlist").setup {
-      -- your configuration comes here
-      -- or leave it empty to use the default settings
-      -- refer to the configuration section below
-    }
-  end
-}
-```
-
-
 ## ⚙️ Configuration
 
 Bufferlist comes with the following defaults:
@@ -68,6 +49,8 @@ Bufferlist comes with the following defaults:
     close_all_saved="d0",
     close_bufferlist = "q" 
   },
+  win_keymaps = {}, -- add keymaps to the BufferList window
+  bufs_keymaps = {}, -- add keymaps to each line number in the BufferList window
   width = 40,
   prompt = "", -- for multi_{close,save}_buf prompt
   save_prompt = "󰆓 ",
@@ -113,6 +96,83 @@ Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buf
 ### Closing buffer list window
 Press `keymap.close_bufferlist` or just leave the bufferlist window
 
+### Adding custom BufferList window keymaps
+You can assign custom keymaps to the BufferList window with `win_keymaps` option.
+`win_keymaps` takes a table of `{key, func, keymap_opts}` items.
+- `key`: (string) Left-hand side {lhs} of the mapping.
+- `func`: (function) Right-hand side {rhs} of the mapping.
+  - Receives one argument, a table with the following keys:
+    - `winid`: (number) the window id of the BufferList window.
+    - `bl_buf`: (number) the bufferlist window scratch buffer.
+    - `buffers`: (table) the listed buffers ids.
+    - `open_bufferlist`: (function) function to open the BufferList window. _(useful for refreshing the BufferList window. But you will have to delete the BufferList scratch buffer first. with `bwipeout` for example. As shown in the example below).
+- `opts`: (table) Same opts passed to `vim.keymap.set()`. (The `buffer` field is not necessary).
+
+This example shows how to set a custom keymap for switching buffers with the enter key, and a usless one for an unnecessary refresh:
+```lua
+win_keymaps = {
+  {
+    "<cr>",
+    function(opts)
+      local curpos = vim.fn.line(".")
+      vim.cmd("bwipeout | buffer " .. opts.buffers[curpos])
+    end,
+  { desc = "BufferList: my description" },
+  },
+  {
+    "r", -- refresh the bufferlist window
+    function(opts)
+      vim.cmd('bwipeout')
+      opts.open_bufferlist()
+    end,
+    {}
+  }
+},
+```
+
+>❗️📑📒 **_Note:_** _All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window.
+
+> **_Note:_** _The `<cr>` keymap here serves just as an example. BufferList doesn't ship with it for a reason. It defies one of BufferList's core principles: "As few key strokes as posssible". Most people who want it are just used to interfaces with the same navigation `<cr>`. If you're one yourself, I highly recommended not setting this keymap since it will slow you down. And try getting used to the BufferList's way of doing things instead.
+
+### Adding keymaps for buffers
+You can also add keymaps to line numners in the BufferList window with `bufs_keymaps` option.
+`bufs_keymaps` takes a table of `{key, func, keymap_opts}` items.
+- `key`: (string) Left-hand side {lhs} of the mapping. **Will be suffixed with the `<line_number>s`**.
+- `func`: (function) Right-hand side {rhs} of the mapping.
+  - Receives one argument, a table with the following keys:
+    - `line_number`: (number) `<line_number>` pressed after `key`
+    - `bl_buf`: (number) the bufferlist window scratch buffer.
+    - `buffers`: (table) the listed buffers ids.
+    - `open_bufferlist`: (function) function to open the BufferList window. _(useful for refreshing the BufferList window. But you will have to delete the BufferList scratch buffer first. with `bwipeout` for example. As shown in the example above).
+- `opts`: (table) Same opts passed to `vim.keymap.set()`. (The `buffer` field is not necessary). **`desc` option (if specified) will be suffixed with the icon and the buffername in the corresponding line number**.
+
+Here is an example of adding keymaps to show the buffer in a new split window. As well as again some uselessness.
+```lua
+bufs_keymaps = {
+  {
+    "vs",
+    function(opts)
+      vim.cmd("bwipeout | vs " .. vim.fn.bufname(opts.buffers[opts.line_number]))
+    end,
+    { desc = "BufferList: show buffer in a split window" }, -- desc (if present) will be suffixed with the contents of each of the lines in the BufferList window. for example: "BufferList: show in a split window  example.lua"
+  },
+  {
+    "p",
+    function(opts)
+      vim.cmd(":echo 'line_number is: " .. tostring(opts.line_number) .. ", bl_buf is: " .. tostring(opts.bl_buf) .. "'")
+    end,
+    {},
+  },
+},
+```
+Now you can press `vs5` to show the buffer at line 5 in a new window. And press `p3` to print a useless message.
+
+>❗️📑📒 **_Note:_** _All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window.
+
+## User commands
+`BufferList`
+
+## General notes
 >❗️📑📒 **_Note:_** _[timeout](https://neovim.io/doc/user/options.html#'timeout') between `<perfix>` and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen') (*which by default is set to 1000ms*).
 
 >❗️You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work.
@@ -128,9 +188,6 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 >❗️📑📒 **_Note:_** _Empty buffers are ignored while saving. (empty buffers usually occur when they are in the `argument-list` but not yet loaded).
 
 >📑📒 **_Note:_** _Bufferlist will show icons in the virt text. If you have diagnostic icons defined (for example with `sign_defign`), bufferlist will show the latter instead.
-
-## User commands
-`BufferList`
 
 ## Highlight groops
 
