@@ -4,9 +4,7 @@
 ## Table of Contents
 - [Features](#features)
 - [Installation](#installation)
-  <!-- WARN: I don't know if this will go to the lazy.nvim section  -->
-  - [lazy.nvim](#lazy.nvim)
-  <!-- WARN: I don't know if this will go to the configuration section since it has an emoji -->
+  - lazy.nvim
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [Switching to an other buffer](#switching-to-an-other-buffer)
@@ -44,7 +42,7 @@
  - Responsive height
  - Not gluted with unnecessary features. (**_bufferlist comes only with features that you would use_**)
 
-## 📦 Installation
+## Installation
 
 Install the plugin with your preferred package manager:
 
@@ -64,7 +62,7 @@ Install the plugin with your preferred package manager:
   },
 }
 ```
-## ⚙️ Configuration
+## Configuration
 
 Bufferlist comes with the following defaults:
 
@@ -141,6 +139,7 @@ press `keymap.toggle_path` to toggle the relative path to each buffer from the n
 set `show_path` to `true` to show the relative path the first time you open the BufferList window.
 
 ### Adding custom keymaps
+You can add custom keymaps for BufferList window via `win_keymaps` option, and keymaps for buffers via `bufs_keymaps` option
 #### For BufferList window
 You can assign custom keymaps to the BufferList window with `win_keymaps` option.
 `win_keymaps` takes a table of `{key, func, keymap_opts}` items.
