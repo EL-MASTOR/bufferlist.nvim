@@ -34,13 +34,14 @@
  - Super fast, (*since the code base is very small*) 
  - Super easy to use, (**_you can list, switch and manage buffers with as few key strokes as possible_**)
  - Highlights the buffer lines as you write them in the prompt
+ - Custom keymaps
  - Save all unsaved
  - Close all saved
  - Show or toggle relative path
  - Buffer unsaved icon
  - Support for diagnostics
  - Responsive height
- - Not gluted with unnecessary features. (**_bufferlist comes only with features that you would use_**)
+ - Not gluted with unnecessary features. (**_BufferList comes only with features that you would use_**)
 
 ## Installation
 
@@ -85,7 +86,7 @@ Bufferlist comes with the following defaults:
   prompt = "", -- for multi_{close,save}_buf prompt
   save_prompt = "󰆓 ",
   top_prompt = true, -- set this to false if you want the prompt to be at the bottom of the window instead of on top of it.
-  show_path = false,
+  show_path = false, -- show the relative paths the first time BufferList window is opened
 }
 ```
 ## Usage
@@ -209,7 +210,7 @@ bufs_keymaps = {
   },
 },
 ```
-Now you can press `vs5` to show the buffer at line 5 in a new window. And press `h3` to print a useless message.
+Now you can press `vs5` to show the buffer at line 5 in a new vertical split window. And press `h3` to print a useless message.
 
 >❗️📑📒 **_Note:_** _All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window.
 
@@ -240,11 +241,11 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 
 - `BufferListCurrentBuffer`
 - `BufferListModifiedIcon`
-- `BufferListCloseIcon`
 - `BufferListLine`
 - `BufferListPromptSeperator`
 - `BufferListPromptForce`
 - `BufferListPromptMultiSelected`
+- `BufferListPath`
 
 ## Feedback
 

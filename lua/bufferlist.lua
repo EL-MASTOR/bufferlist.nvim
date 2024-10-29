@@ -65,9 +65,8 @@ local function save_buffer(listed_bufs, index, scratch_buffer)
 	pcall(api.nvim_buf_call, listed_bufs[index], function()
 		cmd("w")
 		bo[scratch_buffer].modifiable = true
-		api.nvim_buf_set_text(scratch_buffer, index - 1, 0, index - 1, 4, { "" })
+		api.nvim_buf_set_text(scratch_buffer, index - 1, 0, index - 1, 4, { " " })
 		bo[scratch_buffer].modifiable = false
-		api.nvim_buf_add_highlight(scratch_buffer, ns_id, "BufferListCloseIcon", index - 1, 0, 6)
 	end)
 end
 
@@ -164,24 +163,41 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 	end, { buffer = prompt_scratch_buf })
 end
 
-local function toggle_path(the_scratch_buf, the_relative_paths, the_current_buf_line, the_current_extid, current_length)
+local function toggle_path(
+	the_scratch_buf,
+	the_listed_bufs,
+	the_relative_paths,
+	the_current_buf_line,
+	the_current_extid,
+	current_length
+)
 	vim.bo[the_scratch_buf].modifiable = true
-	if not default_opts.show_path then
-		for index, value in ipairs(the_relative_paths) do
-			api.nvim_buf_set_text(the_scratch_buf, index - 1, 12, index - 1, 12, { value .. "/" })
-		end
-		if the_current_extid then
-			api.nvim_buf_set_extmark(the_scratch_buf, ns_id, the_current_buf_line - 1, 12, {
-				id = the_current_extid,
-				end_col = current_length + #the_relative_paths[the_current_buf_line] + 1,
-				hl_group = "BufferListCurrentBuffer",
-			})
-		end
-	else
-		for index, value in ipairs(the_relative_paths) do
-			api.nvim_buf_set_text(the_scratch_buf, index - 1, 12, index - 1, 12 + #value + 1, {})
+	for index, value in ipairs(the_relative_paths) do
+		local byteidx = bo[the_listed_bufs[index]].modified and 12 or 9
+		if not default_opts.show_path then
+			api.nvim_buf_set_text(the_scratch_buf, index - 1, byteidx, index - 1, byteidx, { value .. "/" })
+			api.nvim_buf_add_highlight(
+				the_scratch_buf,
+				ns_id,
+				"BufferListPath",
+				index - 1,
+				byteidx,
+				byteidx + 1 + #value
+			)
+		else
+			api.nvim_buf_set_text(the_scratch_buf, index - 1, byteidx, index - 1, byteidx + #value + 1, {})
 		end
 	end
+
+	if not default_opts.show_path and the_current_extid then
+		local byteidx = bo[the_listed_bufs[the_current_buf_line]].modified and 12 or 9
+		api.nvim_buf_set_extmark(the_scratch_buf, ns_id, the_current_buf_line - 1, byteidx, {
+			id = the_current_extid,
+			end_col = current_length + #the_relative_paths[the_current_buf_line] + 1,
+			hl_group = "BufferListCurrentBuffer",
+		})
+	end
+
 	default_opts.show_path = not default_opts.show_path
 	vim.bo[the_scratch_buf].modifiable = false
 end
@@ -209,7 +225,7 @@ local function list_buffers()
 			local icon, color = devicons.get_icon_color(bufname)
 			icon = icon or ""
 			bufname = bufname == "" and "[No Name]" or bufname
-			local line = (bo[b[i]].modified and "󰝥 ▎" or "󱎘 ▎") .. icon .. " " .. bufname
+			local line = (bo[b[i]].modified and "󰝥 ▎" or "  ▎") .. icon .. " " .. bufname
 			table.insert(bufs_names, line)
 			table.insert(listed_bufs, b[i])
 			current_buf_line = b[i] == current_buf and #bufs_names or current_buf_line
@@ -247,9 +263,15 @@ local function list_buffers()
 				local bkm = vim.deepcopy(default_opts.bufs_keymaps[index], true)
 				local keymap_opts = bkm[3]
 				keymap_opts.buffer = scratch_buf
-				keymap_opts.desc = keymap_opts.desc and keymap_opts.desc .. desc_bufname or "BufferList: custom user defined buffers keymap for" .. desc_bufname
+				keymap_opts.desc = keymap_opts.desc and keymap_opts.desc .. desc_bufname
+					or "BufferList: custom user defined buffers keymap for" .. desc_bufname
 				km.set("n", bkm[1] .. tostring(len), function()
-					bkm[2]({ bl_buf = scratch_buf, buffers = listed_bufs, line_number = len, open_bufferlist = list_buffers })
+					bkm[2]({
+						bl_buf = scratch_buf,
+						buffers = listed_bufs,
+						line_number = len,
+						open_bufferlist = list_buffers,
+					})
 				end, keymap_opts)
 			end
 		end
@@ -258,21 +280,22 @@ local function list_buffers()
 	api.nvim_buf_set_lines(scratch_buf, 0, 1, true, bufs_names)
 
 	for i = 1, #bufs_names do
+		local byteidx = 2
 		if bo[listed_bufs[i]].modified then
-			api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListModifiedIcon", i - 1, 0, 5)
-		else
-			api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListCloseIcon", i - 1, 0, 5)
+			byteidx = 5
+			api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListModifiedIcon", i - 1, 0, byteidx)
 		end
-		api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListLine", i - 1, 5, 7)
+		api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListLine", i - 1, byteidx, byteidx + 2)
 		if icon_colors[i] then
 			local hl_group = "BufferListIcon" .. tostring(i)
-			api.nvim_buf_add_highlight(scratch_buf, ns_id, hl_group, i - 1, 7, 12)
+			api.nvim_buf_add_highlight(scratch_buf, ns_id, hl_group, i - 1, byteidx + 2, byteidx + 7)
 			cmd("hi " .. hl_group .. " guifg=" .. icon_colors[i])
 		end
 	end
 
 	if current_buf_line then
-		current_extid = api.nvim_buf_set_extmark(scratch_buf, ns_id, current_buf_line - 1, 12, {
+		local byteidx = bo[listed_bufs[current_buf_line]].modified and 12 or 9
+		current_extid = api.nvim_buf_set_extmark(scratch_buf, ns_id, current_buf_line - 1, byteidx, {
 			end_col = #bufs_names[current_buf_line],
 			hl_group = "BufferListCurrentBuffer",
 		})
@@ -291,10 +314,11 @@ local function list_buffers()
 						vim.schedule(function()
 							toggle_path(
 								scratch_buf,
+								listed_bufs,
 								relative_paths,
 								current_buf_line,
 								current_extid,
-								#bufs_names[current_buf_line]
+								current_extid and #bufs_names[current_buf_line]
 							)
 						end)
 					end
@@ -365,14 +389,21 @@ local function list_buffers()
 	end, km_opts(scratch_buf, "close all saved buffers"))
 
 	km.set("n", default_opts.keymap.toggle_path, function()
-		toggle_path(scratch_buf, relative_paths, current_buf_line, current_extid, #bufs_names[current_buf_line])
+		toggle_path(
+			scratch_buf,
+			listed_bufs,
+			relative_paths,
+			current_buf_line,
+			current_extid,
+			current_extid and #bufs_names[current_buf_line]
+		)
 	end, km_opts(scratch_buf, "toggle path"))
 
 	for index = 1, #default_opts.win_keymaps do
 		local wkm = default_opts.win_keymaps[index]
 		local keymap_opts = wkm[3]
 		keymap_opts.buffer = scratch_buf
-    keymap_opts.desc = keymap_opts.desc or "BufferList: custom user defined keymap"
+		keymap_opts.desc = keymap_opts.desc or "BufferList: custom user defined keymap"
 		km.set("n", wkm[1], function()
 			wkm[2]({ bl_buf = scratch_buf, buffers = listed_bufs, winid = win, open_bufferlist = list_buffers })
 		end, keymap_opts)
@@ -398,7 +429,7 @@ function bufferlist.setup(opts)
 	end, { desc = "Open BufferList" })
 
 	vim.cmd(
-		[[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListCloseIcon guifg=#fb4934 gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPromptNumber guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 guibg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold | hi BufferListPromptMultiSelected guibg=#7c6f64 gui=bold]]
+		[[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPromptNumber guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 guibg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold | hi BufferListPromptMultiSelected guibg=#7c6f64 gui=bold | hi BufferListPath guifg=#8ec07c]]
 	)
 end
 return bufferlist
