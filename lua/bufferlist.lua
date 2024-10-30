@@ -351,6 +351,8 @@ local function list_buffers()
 	vim.wo[win].number = true
 	bo[scratch_buf].modifiable = false
 
+  fn.setcursorcharpos(1,6)
+
 	api.nvim_create_autocmd("WinLeave", {
 		command = "bwipeout",
 		buffer = scratch_buf,
