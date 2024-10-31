@@ -1,5 +1,5 @@
-![bufferlist preview](https://i.imgur.com/pgVqpfN.jpeg)
-![bufferlist multi-save preview](https://i.imgur.com/5ujoFpe.jpeg)
+![bufferlist preview](https://i.imgur.com/QAOBNzH.jpeg)
+![bufferlist multi-save preview](https://i.imgur.com/Sv12Wlz.jpeg)
 
 ## Table of Contents
 - [Features](#features)
@@ -177,7 +177,7 @@ win_keymaps = {
 
 >❗️📑📒 **_Note:_** _All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window.
 
-> **_Note:_** _The `<cr>` keymap here serves just as an example. BufferList doesn't ship with it for a reason. It defies one of BufferList's core principles: "As few key strokes as posssible". Most people who want it are just used to interfaces with the same navigation `<cr>`. If you're one yourself, I highly recommended not setting this keymap since it will slow you down. And try getting used to the BufferList's way of doing things instead.
+> **_Note:_** _Using the `<cr>` keymap is not recommended, because it will slow you down since it uses more key strokes.
 
 #### For buffers
 You can also add keymaps to line numners in the BufferList window with `bufs_keymaps` option.
