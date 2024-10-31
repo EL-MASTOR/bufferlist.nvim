@@ -163,17 +163,10 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 	end, { buffer = prompt_scratch_buf })
 end
 
-local function toggle_path(
-	the_scratch_buf,
-	the_listed_bufs,
-	the_relative_paths,
-	the_current_buf_line,
-	the_current_extid,
-	current_length
-)
+local function toggle_path(the_scratch_buf, the_relative_paths, the_current_buf_line, the_current_extid, current_length)
 	vim.bo[the_scratch_buf].modifiable = true
 	for index, value in ipairs(the_relative_paths) do
-		local byteidx = bo[the_listed_bufs[index]].modified and 12 or 9
+		local byteidx = fn.byteidx(api.nvim_buf_get_text(the_scratch_buf, index - 1, 0, index - 1, -1, {})[1], 5)
 		if not default_opts.show_path then
 			api.nvim_buf_set_text(the_scratch_buf, index - 1, byteidx, index - 1, byteidx, { value .. "/" })
 			api.nvim_buf_add_highlight(
@@ -190,7 +183,10 @@ local function toggle_path(
 	end
 
 	if not default_opts.show_path and the_current_extid then
-		local byteidx = bo[the_listed_bufs[the_current_buf_line]].modified and 12 or 9
+		local byteidx = fn.byteidx(
+			api.nvim_buf_get_text(the_scratch_buf, the_current_buf_line - 1, 0, the_current_buf_line - 1, -1, {})[1],
+			5
+		)
 		api.nvim_buf_set_extmark(the_scratch_buf, ns_id, the_current_buf_line - 1, byteidx, {
 			id = the_current_extid,
 			end_col = current_length + #the_relative_paths[the_current_buf_line] + 1,
@@ -314,7 +310,6 @@ local function list_buffers()
 						vim.schedule(function()
 							toggle_path(
 								scratch_buf,
-								listed_bufs,
 								relative_paths,
 								current_buf_line,
 								current_extid,
@@ -351,7 +346,7 @@ local function list_buffers()
 	vim.wo[win].number = true
 	bo[scratch_buf].modifiable = false
 
-  fn.setcursorcharpos(1,6)
+	fn.setcursorcharpos(1, 6)
 
 	api.nvim_create_autocmd("WinLeave", {
 		command = "bwipeout",
@@ -393,7 +388,6 @@ local function list_buffers()
 	km.set("n", default_opts.keymap.toggle_path, function()
 		toggle_path(
 			scratch_buf,
-			listed_bufs,
 			relative_paths,
 			current_buf_line,
 			current_extid,
