@@ -116,7 +116,7 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 			)
 			local recent_numbers = {}
 			for line_nr in string.gmatch(line, "%d+") do
-				if tonumber(line_nr) <= buf_count then
+				if tonumber(line_nr) <= buf_count and string.sub(line_nr, 1, 1) ~= '0' then
 					if not line_numbers[line_nr] then
 						local extid = api.nvim_buf_set_extmark(scratch_buffer, prompt_ns, tonumber(line_nr) - 1, 0, {
 							line_hl_group = "BufferListPromptMultiSelected",
