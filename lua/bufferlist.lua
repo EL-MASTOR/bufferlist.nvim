@@ -425,7 +425,7 @@ function bufferlist.setup(opts)
 	end, { desc = "Open BufferList" })
 
 	vim.cmd(
-		[[hi BufferListCurrentBuffer guifg=#fe8019 gui=bold | hi BufferListModifiedIcon guifg=#8ec07c gui=bold | hi BufferListLine guifg=#fabd2f gui=bold | hi BufferListPromptNumber guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 guibg=#912771 gui=bold | hi BufferListPromptForce guifg=#f00000 gui=bold | hi BufferListPromptMultiSelected guibg=#7c6f64 gui=bold | hi BufferListPath guifg=#8ec07c]]
+		[[hi link BufferListCurrentBuffer Question | hi link BufferListModifiedIcon Macro | hi link BufferListLine MoreMsg | hi BufferListPromptNumber guifg=#118197 gui=bold | hi BufferListPromptSeperator guifg=#912771 guibg=#912771 gui=bold | hi link BufferListPromptForce WarningMsg | hi link BufferListPromptMultiSelected Visual | hi link BufferListPath Directory]]
 	)
 end
 return bufferlist
