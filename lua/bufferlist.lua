@@ -304,7 +304,7 @@ local function list_buffers()
 				{ text = true },
 				function(out)
 					local res = string.gsub(out.stdout, "\n", "")
-					table.insert(relative_paths, res)
+					relative_paths[i] = res
 					if i == #bufs_names and default_opts.show_path then
 						default_opts.show_path = false
 						vim.schedule(function()
