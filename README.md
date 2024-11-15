@@ -5,6 +5,7 @@
 - [Features](#features)
 - [Installation](#installation)
   - lazy.nvim
+- [requirements](#requirements)
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [Switching to an other buffer](#switching-to-an-other-buffer)
@@ -63,6 +64,10 @@ Install the plugin with your preferred package manager:
   },
 }
 ```
+## Requirements
+
+[realpath](https://www.gnu.org/software/coreutils/manual/html_node/realpath-invocation.html) for generating the relative paths
+
 ## Configuration
 
 Bufferlist comes with the following defaults:
@@ -90,7 +95,8 @@ Bufferlist comes with the following defaults:
 }
 ```
 ## Usage
->❗️**_The following key maps are buffer local key maps, they work only inside the bufferlist floating window_**
+>❗️*The following key maps are buffer local key maps, they work only inside the bufferlist floating window*.
+
 >❗️📑📒 **_Note:_**_*`<line_number>` represents the line number of the buffer name*_
 
 ### Switching to an other buffer
@@ -116,22 +122,22 @@ Press `keymap.close_all_saved`
 ### Closing multiple buffers
 Press `keymap.multi_close_buf` to show a prompt, and then enter the `<line_number>`s of all the buffers you want to close, seperated by a seperator. The seperator should be any non-digit character, and there is no limit to the length or the kind of characters used in the seperator as long as they are not digits.
 
->❗️Make sure that the first character isn't `!`.
+>❗️*Make sure that the first character isn't `!`*.
 
->❗️If you specified an unsaved buffer, it is ignored.
+>❗️*If you specified an unsaved buffer, it is ignored*.
 
->If a `<line_number>` you specified doesn't exist in the bufferlist window line numbers, it is ignored.
+>*If a `<line_number>` you specified doesn't exist in the bufferlist window line numbers, it is ignored*.
 
 ### Force closing multiple buffers
 Press `keymap.multi_close_buf` and then enter `!` at the very beginning of the prompt, and then carry on with the rest of the steps already described in [Closing multiple buffers](#closing-multiple-buffers)
     
->❗️Make sure that `!` is the very first character in the prompt, it shouldn't be preceded by anything, otherwise it would behave just like [Closing multiple buffers](#closing-multiple-buffers)
+>❗️*Make sure that `!` is the very first character in the prompt, it shouldn't be preceded by anything, otherwise it would behave just like [Closing multiple buffers](#closing-multiple-buffers)*
 
 ### Saving multiple buffers
 Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buffers you want to save seperated by a seperator. The seperator has the same characteristics described in [Closing multiple buffers](#closing-multiple-buffers)
 
 ### Toggle or show relative path
->❗️This uses the output captured from [realpath](https://www.gnu.org/software/coreutils/realpath)
+>❗️*This uses the output captured from [realpath](https://www.gnu.org/software/coreutils/realpath)*
 
 #### Toggle relative path
 press `keymap.toggle_path` to toggle the relative path to each buffer from the neovim cwd `:pwd`.
@@ -175,9 +181,9 @@ win_keymaps = {
 },
 ```
 
->❗️📑📒 **_Note:_** _All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window.
+>❗️📑📒 **_Note:_** *All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window*.
 
-> **_Note:_** _Using the `<cr>` keymap is not recommended, because it will slow you down since it uses more key strokes.
+> **_Note:_** *Using the `<cr>` keymap is not recommended, because it will slow you down since it uses more key strokes*.
 
 #### For buffers
 You can also add keymaps to line numners in the BufferList window with `bufs_keymaps` option.
@@ -212,7 +218,7 @@ bufs_keymaps = {
 ```
 Now you can press `vs5` to show the buffer at line 5 in a new vertical split window. And press `h3` to print a useless message.
 
->❗️📑📒 **_Note:_** _All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window.
+>❗️📑📒 **_Note:_** *All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window*.
 
 ### Closing buffer list window
 Press `keymap.close_bufferlist` or just leave the bufferlist window
@@ -221,21 +227,21 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 `BufferList`
 
 ## General notes
->❗️📑📒 **_Note:_** _[timeout](https://neovim.io/doc/user/options.html#'timeout') between `<perfix>` and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen') (*which by default is set to 1000ms*).
+>❗️📑📒 **_Note:_** *[timeout](https://neovim.io/doc/user/options.html#'timeout') between `<perfix>` and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen')* (*which by default is set to 1000ms*).
 
->❗️You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work.
->This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press *Esc* and try again quicker.
->However it is still recommended to not remap them using `ctrl`, `alt`, `shift` and `<leader>` keys since that will add more key strokes for you._
+>❗️*You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work*.
+>*This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press `Esc` and try again quicker.
+>However it is still recommended to not remap them using `ctrl`, `alt`, `shift` and `<leader>` keys since that will add more key strokes for you*.
 
->❗️📑📒 **_Note:_** _Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them.
+>❗️📑📒 **_Note:_** *Terminal buffers are ignored in closing or multi-closing. To close them, you have to [force-close](#force-closing-buffers) them, or [force-multi-close](#force-closing-multiple-buffers) them*.
 
->💡 **_Tip:_** _Does not provide keymappings for commands, or maps already builtin in nvim, (such as `:bnext`, `:bufdo`, `<Ctrl_6>`, ...). If you want additional mappings for buffer management and navigations, you can check out `:h buffer-list`, `:h editing`, `:h windows`, etc... .
+>💡 **_Tip:_** *Does not provide keymappings for commands, or maps already builtin in nvim, (such as `:bnext`, `:bufdo`, `<Ctrl_6>`, ...). If you want additional mappings for buffer management and navigations, you can check out `:h buffer-list`, `:h editing`, `:h windows`, etc*... .
 
->❗️📑📒 **_Note:_** _The buffers are listed in the same order as the buffer-list (`:buffers`).
+>❗️📑📒 **_Note:_** *The buffers are listed in the same order as the buffer-list (`:buffers`)*.
 
->❗️📑📒 **_Note:_** _Empty buffers are ignored while saving. (empty buffers usually occur when they are in the `argument-list` but not yet loaded).
+>❗️📑📒 **_Note:_** *Empty buffers are ignored while saving. (empty buffers usually occur when they are in the `argument-list` but not yet loaded)*.
 
->📑📒 **_Note:_** _Bufferlist will show icons in the virt text. If you have diagnostic icons defined (for example with `sign_defign`), bufferlist will show the latter instead.
+>📑📒 **_Note:_** *Bufferlist will show icons in the virt text. If you have diagnostic icons defined (for example with `sign_defign`), bufferlist will show the latter instead*.
 
 ## Highlight groops
 
