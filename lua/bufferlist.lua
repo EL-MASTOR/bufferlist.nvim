@@ -298,7 +298,9 @@ local function list_buffers()
 	end
 
 	vim.schedule(function()
+    -- TODO: clean up this code
 		for i = 1, #bufs_names do
+      if fn.executable("realpath") ==1 then
 			vim.system(
 				{ "realpath", "--relative-to", vim.uv.cwd(), vim.fn.expand("#" .. listed_bufs[i] .. ":p:h") },
 				{ text = true },
@@ -319,6 +321,22 @@ local function list_buffers()
 					end
 				end
 			)
+      else
+        relative_paths[i]=fn.expand("#"..listed_bufs[i]..":~:.:h")
+        -- print('...', vim.inspect(relative_paths), i, listed_bufs[i], fn.expand("#"..listed_bufs[i]..":~:.:h"))
+					if i == #bufs_names and default_opts.show_path then
+						default_opts.show_path = false
+						vim.schedule(function()
+							toggle_path(
+								scratch_buf,
+								relative_paths,
+								current_buf_line,
+								current_extid,
+								current_extid and #bufs_names[current_buf_line]
+							)
+						end)
+					end
+      end
 		end
 	end)
 

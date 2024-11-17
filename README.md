@@ -64,9 +64,10 @@ Install the plugin with your preferred package manager:
   },
 }
 ```
-## Requirements
+## Dependencies
 
-[realpath](https://www.gnu.org/software/coreutils/manual/html_node/realpath-invocation.html) for generating the relative paths
+[nvim-tree/nvim-web-devicons"](https://github.com/nvim-tree/nvim-web-devicons) for filetype icons.
+<u>(recommended)</u> [realpath](https://www.gnu.org/software/coreutils/manual/html_node/realpath-invocation.html) for generating the relative paths.
 
 ## Configuration
 
@@ -137,7 +138,9 @@ Press `keymap.multi_close_buf` and then enter `!` at the very beginning of the p
 Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buffers you want to save seperated by a seperator. The seperator has the same characteristics described in [Closing multiple buffers](#closing-multiple-buffers)
 
 ### Toggle or show relative path
->❗️*This uses the output captured from [realpath](https://www.gnu.org/software/coreutils/realpath)*
+>❗️*This uses the output captured from [realpath](https://www.gnu.org/software/coreutils/realpath) if it exists*
+
+>❗️*If [realpath](https://www.gnu.org/software/coreutils/realpath) doesn't exist, it uses vim's builtin `expand("#"..buffer..":~:.:h")` to do neovim's best to determine the relative path. Prefer installing [realpath](https://www.gnu.org/software/coreutils/realpath) over this.*
 
 #### Toggle relative path
 press `keymap.toggle_path` to toggle the relative path to each buffer from the neovim cwd `:pwd`.
