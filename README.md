@@ -5,7 +5,7 @@
 - [Features](#features)
 - [Installation](#installation)
   - lazy.nvim
-- [requirements](#requirements)
+- [Requirements](#requirements)
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [Switching to an other buffer](#switching-to-an-other-buffer)
@@ -64,10 +64,11 @@ Install the plugin with your preferred package manager:
   },
 }
 ```
-## Dependencies
+## Requirements
 
 [nvim-tree/nvim-web-devicons"](https://github.com/nvim-tree/nvim-web-devicons) for filetype icons.
-<u>(recommended)</u> [realpath](https://www.gnu.org/software/coreutils/manual/html_node/realpath-invocation.html) for generating the relative paths.
+
+_**(recommended)**_ [realpath](https://www.gnu.org/software/coreutils/manual/html_node/realpath-invocation.html) for better relative paths generating.
 
 ## Configuration
 
