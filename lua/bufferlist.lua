@@ -11,6 +11,7 @@ local signs = { "Error", "Warn", "Info", "Hint" }
 local bufferlist_signs = { " ", " ", " ", " " }
 local top_border = { "╭", "─", "╮", "│", "", "", "", "│" }
 local bottom_border = { "", "", "", "│", "╯", "─", "╰", "│" }
+---@type BufferListConfig
 local default_opts = {
 	keymap = {
 		close_buf_prefix = "c",
@@ -32,10 +33,15 @@ local default_opts = {
 	show_path = false,
 }
 
+---@param the_scratch_buf number
+---@param description string
+---@return table
 local function km_opts(the_scratch_buf, description)
 	return { buffer = the_scratch_buf, silent = true, desc = "BufferList: " .. description }
 end
 
+---@param buffer number
+---@return table
 local function diagnosis(buffer)
 	local count = vim.diagnostic.count(buffer)
 	local diagnosis_display = {}
@@ -47,6 +53,10 @@ local function diagnosis(buffer)
 	return diagnosis_display
 end
 
+---@param listed_bufs table
+---@param index number
+---@param force boolean?
+---@return nil
 local function close_buffer(listed_bufs, index, force)
 	local bn = listed_bufs[index]
 	if bo[bn].buftype == "terminal" and not force then
@@ -61,6 +71,9 @@ local function close_buffer(listed_bufs, index, force)
 	end
 end
 
+---@param listed_bufs table
+---@param index number
+---@param scratch_buffer number
 local function save_buffer(listed_bufs, index, scratch_buffer)
 	pcall(api.nvim_buf_call, listed_bufs[index], function()
 		cmd("w")
@@ -70,6 +83,12 @@ local function save_buffer(listed_bufs, index, scratch_buffer)
 	end)
 end
 
+---@param win number
+---@param height number
+---@param listed_buffers table
+---@param scratch_buffer number
+---@param save_or_close string
+---@param list_buffers_func function
 local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or_close, list_buffers_func)
 	local prompt_ns = api.nvim_create_namespace("BufferListPromptNamespace")
 	local prompt_scratch_buf = api.nvim_create_buf(false, true)
@@ -116,7 +135,7 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 			)
 			local recent_numbers = {}
 			for line_nr in string.gmatch(line, "%d+") do
-				if tonumber(line_nr) <= buf_count and string.sub(line_nr, 1, 1) ~= '0' then
+				if tonumber(line_nr) <= buf_count and string.sub(line_nr, 1, 1) ~= "0" then
 					if not line_numbers[line_nr] then
 						local extid = api.nvim_buf_set_extmark(scratch_buffer, prompt_ns, tonumber(line_nr) - 1, 0, {
 							line_hl_group = "BufferListPromptMultiSelected",
@@ -163,6 +182,11 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 	end, { buffer = prompt_scratch_buf })
 end
 
+---@param the_scratch_buf number
+---@param the_relative_paths table
+---@param the_current_buf_line number
+---@param the_current_extid number
+---@param current_length nil|number
 local function toggle_path(the_scratch_buf, the_relative_paths, the_current_buf_line, the_current_extid, current_length)
 	vim.bo[the_scratch_buf].modifiable = true
 	for index, value in ipairs(the_relative_paths) do
@@ -297,46 +321,41 @@ local function list_buffers()
 		})
 	end
 
-	vim.schedule(function()
-    -- TODO: clean up this code
-		for i = 1, #bufs_names do
-      if fn.executable("realpath") ==1 then
-			vim.system(
-				{ "realpath", "--relative-to", vim.uv.cwd(), vim.fn.expand("#" .. listed_bufs[i] .. ":p:h") },
-				{ text = true },
-				function(out)
-					local res = string.gsub(out.stdout, "\n", "")
-					relative_paths[i] = res
-					if i == #bufs_names and default_opts.show_path then
-						default_opts.show_path = false
-						vim.schedule(function()
-							toggle_path(
-								scratch_buf,
-								relative_paths,
-								current_buf_line,
-								current_extid,
-								current_extid and #bufs_names[current_buf_line]
-							)
-						end)
-					end
-				end
+	---@param the_relative_paths table
+	local function path_toggle(the_relative_paths)
+		default_opts.show_path = false
+		vim.schedule(function()
+			toggle_path(
+				scratch_buf,
+				the_relative_paths,
+				current_buf_line,
+				current_extid,
+				current_extid and #bufs_names[current_buf_line]
 			)
-      else
-        relative_paths[i]=fn.expand("#"..listed_bufs[i]..":~:.:h")
-        -- print('...', vim.inspect(relative_paths), i, listed_bufs[i], fn.expand("#"..listed_bufs[i]..":~:.:h"))
-					if i == #bufs_names and default_opts.show_path then
-						default_opts.show_path = false
-						vim.schedule(function()
-							toggle_path(
-								scratch_buf,
-								relative_paths,
-								current_buf_line,
-								current_extid,
-								current_extid and #bufs_names[current_buf_line]
-							)
-						end)
+		end)
+	end
+
+  -- PERF: the previous ugly approch is probably more performant than this.
+	vim.schedule(function()
+		for i = 1, #bufs_names do
+			if fn.executable("realpath") == 1 then
+				vim.system(
+					{ "realpath", "--relative-to", vim.uv.cwd(), vim.fn.expand("#" .. listed_bufs[i] .. ":p:h") },
+					{ text = true },
+					function(out)
+						local res = string.gsub(out.stdout, "\n", "")
+						relative_paths[i] = res
+						if i == #bufs_names and default_opts.show_path then
+							path_toggle(relative_paths)
+						end
 					end
-      end
+				)
+			else
+				relative_paths[i] = fn.expand("#" .. listed_bufs[i] .. ":~:.:h")
+				if i == #bufs_names and default_opts.show_path then
+					path_toggle(relative_paths)
+				end
+			end
 		end
 	end)
 
@@ -424,20 +443,9 @@ local function list_buffers()
 	end
 end
 
+---@param opts BufferListConfig?
 function bufferlist.setup(opts)
-	opts = opts or {}
-	for _, opt in ipairs({ "keymap", "win_keymaps", "bufs_keymaps" }) do
-		if opts[opt] then
-			for key, value in pairs(opts[opt]) do
-				default_opts[opt][key] = value
-			end
-		end
-	end
-
-	for _, value in ipairs({ "width", "prompt", "save_prompt", "top_prompt", "show_path" }) do
-		default_opts[value] = opts[value] or default_opts[value]
-	end
-
+	bufferlist.config = vim.tbl_deep_extend("force", default_opts, opts or {})
 	api.nvim_create_user_command("BufferList", function()
 		list_buffers()
 	end, { desc = "Open BufferList" })
