@@ -25,6 +25,7 @@
     - [For buffers](#for-buffers)
   - [Closing buffer list window](#closing-buffer-list-window)
   - [User commands](#user-commands)
+  - [Health](#health)
   - [General notes](#general-notes)
   - [Highlight groops](#highlight-groops)
   - [Feedback](#feedback)
@@ -230,8 +231,11 @@ Press `keymap.close_bufferlist` or just leave the bufferlist window
 ## User commands
 `BufferList`
 
+## Health
+`:checkhealth bufferlist`
+
 ## General notes
->❗️📑📒 **_Note:_** *[timeout](https://neovim.io/doc/user/options.html#'timeout') between `<perfix>` and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen')* (*which by default is set to 1000ms*).
+>❗️📑📒 **_Note:_** *[timeout](https://neovim.io/doc/user/options.html#'timeout') between the keymap and `<line_number>` is controlled by the vim global option [timeoutlen](https://neovim.io/doc/user/options.html#'timeoutlen')* (*which by default is set to 1000ms*).
 
 >❗️*You have to quickly press `<line_number>` before timeoutlen. Otherwise vim will enter operator pending mode and these keymaps will not work*.
 >*This happens because there are global defined key maps starting one of with the keys `s`, `c` or `f`. If you wait until timeoutlen has passed, vim will execute the global mapping instead. Therefore you have to press `Esc` and try again quicker.

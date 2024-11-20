@@ -445,7 +445,7 @@ end
 
 ---@param opts BufferListConfig?
 function bufferlist.setup(opts)
-	bufferlist.config = vim.tbl_deep_extend("force", default_opts, opts or {})
+	default_opts = vim.tbl_deep_extend("force", default_opts, opts or {})
 	api.nvim_create_user_command("BufferList", function()
 		list_buffers()
 	end, { desc = "Open BufferList" })
