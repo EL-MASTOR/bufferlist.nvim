@@ -11,7 +11,6 @@ local signs = { "Error", "Warn", "Info", "Hint" }
 local bufferlist_signs = { " ", " ", " ", " " }
 local top_border = { "╭", "─", "╮", "│", "", "", "", "│" }
 local bottom_border = { "", "", "", "│", "╯", "─", "╰", "│" }
----@type BufferListConfig
 local default_opts = {
 	keymap = {
 		close_buf_prefix = "c",
@@ -182,12 +181,11 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 	end, { buffer = prompt_scratch_buf })
 end
 
----@param the_scratch_buf number
 ---@param the_relative_paths table
----@param the_current_buf_line number
----@param the_current_extid number
----@param current_length nil|number
-local function toggle_path(the_scratch_buf, the_relative_paths, the_current_buf_line, the_current_extid, current_length)
+---@param static table
+local function toggle_path(the_relative_paths, static)
+	local the_scratch_buf, the_current_buf_line, the_current_extid, current_length =
+		static[1], static[2], static[3], static[4]
 	vim.bo[the_scratch_buf].modifiable = true
 	for index, value in ipairs(the_relative_paths) do
 		local byteidx = fn.byteidx(api.nvim_buf_get_text(the_scratch_buf, index - 1, 0, index - 1, -1, {})[1], 5)
@@ -321,21 +319,17 @@ local function list_buffers()
 		})
 	end
 
+	local tpso = { scratch_buf, current_buf_line, current_extid, current_extid and #bufs_names[current_buf_line] }
+
 	---@param the_relative_paths table
 	local function path_toggle(the_relative_paths)
 		default_opts.show_path = false
 		vim.schedule(function()
-			toggle_path(
-				scratch_buf,
-				the_relative_paths,
-				current_buf_line,
-				current_extid,
-				current_extid and #bufs_names[current_buf_line]
-			)
+			toggle_path(the_relative_paths, tpso)
 		end)
 	end
 
-  -- PERF: the previous ugly approch is probably more performant than this.
+	-- PERF: the previous ugly approch is probably more performant than this.
 	vim.schedule(function()
 		for i = 1, #bufs_names do
 			if fn.executable("realpath") == 1 then
@@ -423,13 +417,7 @@ local function list_buffers()
 	end, km_opts(scratch_buf, "close all saved buffers"))
 
 	km.set("n", default_opts.keymap.toggle_path, function()
-		toggle_path(
-			scratch_buf,
-			relative_paths,
-			current_buf_line,
-			current_extid,
-			current_extid and #bufs_names[current_buf_line]
-		)
+		toggle_path(relative_paths, tpso)
 	end, km_opts(scratch_buf, "toggle path"))
 
 	for index = 1, #default_opts.win_keymaps do
@@ -443,7 +431,7 @@ local function list_buffers()
 	end
 end
 
----@param opts BufferListConfig?
+---@param opts table
 function bufferlist.setup(opts)
 	default_opts = vim.tbl_deep_extend("force", default_opts, opts or {})
 	api.nvim_create_user_command("BufferList", function()
