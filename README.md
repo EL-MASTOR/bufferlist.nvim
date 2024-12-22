@@ -226,7 +226,7 @@ Now you can press `vs5` to show the buffer at line 5 in a new vertical split win
 >❗️📑📒 **_Note:_** *All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window*.
 
 ### Closing buffer list window
-Press `keymap.close_bufferlist` or just leave the bufferlist window
+Press `keymap.close_bufferlist`
 
 ## User commands
 `BufferList`

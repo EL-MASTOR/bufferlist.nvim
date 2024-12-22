@@ -379,13 +379,6 @@ local function list_buffers()
 
 	fn.setcursorcharpos(1, 6)
 
-	api.nvim_create_autocmd("WinLeave", {
-		command = "bwipeout",
-		buffer = scratch_buf,
-		once = true,
-		desc = "BufferList auto closing window after losing focus",
-	})
-
 	km.set("n", default_opts.keymap.close_bufferlist, function()
 		cmd("bwipeout")
 	end, km_opts(scratch_buf, "exit"))
