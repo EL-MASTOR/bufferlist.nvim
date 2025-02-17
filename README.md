@@ -105,7 +105,8 @@ Bufferlist comes with the following defaults:
 ### Switching to an other buffer
 press the `<line_number>` of the buffer name you want to switch to (**very simple, isn't this the easiest**)
 > when the loaded buffers are 10 or more, you have to press the numbers quickly to get to the buffer who has 2 digits in `<line_number>`.
-> For example, if you have 15 loaded buffers that are displayed in the bufferlist window, and you want to get to the buffer whose `<line_number>` is 12, you need to press 1 and quickly press 2, if you're wait after pressing 1 you will go to the buffer in `<line_number>` 1 instead 
+> For example, if you have 10 loaded buffers that are displayed in the bufferlist window, and you want to get to the buffer whose `<line_number>` is 10, you need to press 1 and quickly press 0, if you're wait after pressing 1 you will go to the buffer in `<line_number>` 1 instead.
+> See [General notes](#general-notes), and `timeoutlen`.
 
 ### Saving buffers
 If the buffer is not saved, a circle icon is shown before the buffer name, to save it press `s<line_number>`
@@ -148,7 +149,7 @@ Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buf
 press `keymap.toggle_path` to toggle the relative path to each buffer from the neovim cwd `:pwd`.
 
 #### Show relative path
-set `show_path` to `true` to show the relative path the first time you open the BufferList window.
+set `show_path` to `true` to show the relative path the first time you open the BufferList window after it has been loaded.
 
 ### Adding custom keymaps
 You can add custom keymaps for BufferList window via `win_keymaps` option, and keymaps for buffers via `bufs_keymaps` option
@@ -186,14 +187,14 @@ win_keymaps = {
 },
 ```
 
->❗️📑📒 **_Note:_** *All of these keymaps are local to the BufferList. Everything will all be removed when you close the BufferList window*.
+>❗️📑📒 **_Note:_** *All of these keymaps are local to the BufferList. They will all be removed when you close the BufferList window*.
 
 > **_Note:_** *Using the `<cr>` keymap is not recommended, because it will slow you down since it uses more key strokes*.
 
 #### For buffers
-You can also add keymaps to line numners in the BufferList window with `bufs_keymaps` option.
+You can also add keymaps to line numbers in the BufferList window with `bufs_keymaps` option.
 `bufs_keymaps` takes a table of `{key, func, keymap_opts}` items.
-- `key`: (string) Left-hand side {lhs} of the mapping. **Will be suffixed with the `<line_number>s`**.
+- `key`: (string) Left-hand side {lhs} of the mapping. **Will be suffixed with the `<line_number>`s**.
 - `func`: (function) Right-hand side {rhs} of the mapping.
   - Receives one argument, a table with the following keys:
     - `line_number`: (number) `<line_number>` pressed after `key`
@@ -210,14 +211,14 @@ bufs_keymaps = {
     function(opts)
       vim.cmd("bwipeout | vs " .. vim.fn.bufname(opts.buffers[opts.line_number]))
     end,
-    { desc = "BufferList: show buffer in a split window" }, -- `desc` (if present) will be suffixed with the contents of each line in the BufferList window. for example: "BufferList: show in a split window  example.lua".
+    { desc = "BufferList: show buffer in a split window" }, -- `desc` (if present) will be suffixed with the contents of each line in the BufferList window. for example, this `desc` will be set to: "BufferList: show buffer in a split window  example.lua".
   },
   {
     "h",
     function(opts)
       vim.cmd(":echo 'line_number is: " .. tostring(opts.line_number) .. ", bl_buf is: " .. tostring(opts.bl_buf) .. "'")
     end,
-    {}, -- `desc` option is not present here, so it will automatically be set to a pre-set description with the contentsbof each line in the BufferList window. for example: "BufferList: custom user defined buffers keymap for  example.lua"
+    {}, -- `desc` option is not present here, so it will automatically be set to a pre-set description with the contents of each line in the BufferList window. for example: "BufferList: custom user defined buffers keymap for  example.lua"
   },
 },
 ```
