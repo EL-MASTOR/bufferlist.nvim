@@ -268,5 +268,5 @@ Press `keymap.close_bufferlist`
 
 ## Feedback
 
-- If you've got an issue or come up with an awesome idea, don't hesitate to open an issue in github. I appreciate every suggestion.
+- If you've got an issue or come up with an awesome idea, please don't hesitate to open an issue on github. I appreciate every suggestion.
 - If you think this plugin is useful or cool, consider rewarding it with a ⭐.
