@@ -26,8 +26,12 @@ local default_opts = {
 	win_keymaps = {},
 	bufs_keymaps = {},
 	width = 40,
-	prompt = "",
-	save_prompt = "󰆓 ",
+	icons = {
+		line = "▎",
+		modified = "󰝥",
+		prompt = "",
+		save_prompt = "󰆓 ",
+	},
 	top_prompt = true,
 	show_path = false,
 }
@@ -112,8 +116,8 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 		noautocmd = true,
 		style = "minimal",
 	})
-	vim.wo[prompt_win].statuscolumn = (save_or_close == "save" and default_opts.save_prompt or "")
-		.. default_opts.prompt
+	vim.wo[prompt_win].statuscolumn = (save_or_close == "save" and default_opts.icons.save_prompt or "")
+		.. default_opts.icons.prompt
 	cmd("startinsert")
 
 	api.nvim_create_autocmd("TextChangedI", {
@@ -231,6 +235,8 @@ local function list_buffers()
 	local diagnostics = {}
 	local listed_bufs = {}
 	local relative_paths = {}
+	local line_byteidx = fn.byteidx(default_opts.icons.line, 1)
+	local modified_byteidx = fn.byteidx(default_opts.icons.modified, 1)
 
 	local function refresh()
 		cmd("bwipeout")
@@ -243,7 +249,12 @@ local function list_buffers()
 			local icon, color = devicons.get_icon_color(bufname)
 			icon = icon or ""
 			bufname = bufname == "" and "[No Name]" or bufname
-			local line = (bo[b[i]].modified and "󰝥 ▎" or "  ▎") .. icon .. " " .. bufname
+			local line = (bo[b[i]].modified and default_opts.icons.modified or " ")
+				.. " "
+				.. default_opts.icons.line
+				.. icon
+				.. " "
+				.. bufname
 			table.insert(bufs_names, line)
 			table.insert(listed_bufs, b[i])
 			current_buf_line = b[i] == current_buf and #bufs_names or current_buf_line
@@ -300,19 +311,19 @@ local function list_buffers()
 	for i = 1, #bufs_names do
 		local byteidx = 2
 		if bo[listed_bufs[i]].modified then
-			byteidx = 5
+			byteidx = modified_byteidx + 1
 			api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListModifiedIcon", i - 1, 0, byteidx)
 		end
-		api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListLine", i - 1, byteidx, byteidx + 2)
+		api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListLine", i - 1, byteidx, byteidx + line_byteidx)
 		if icon_colors[i] then
 			local hl_group = "BufferListIcon" .. tostring(i)
-			api.nvim_buf_add_highlight(scratch_buf, ns_id, hl_group, i - 1, byteidx + 2, byteidx + 7)
+			api.nvim_buf_add_highlight(scratch_buf, ns_id, hl_group, i - 1, byteidx + line_byteidx, byteidx + line_byteidx + 4)
 			cmd("hi " .. hl_group .. " guifg=" .. icon_colors[i])
 		end
 	end
 
 	if current_buf_line then
-		local byteidx = bo[listed_bufs[current_buf_line]].modified and 12 or 9
+		local byteidx = 5 + line_byteidx + (bo[listed_bufs[current_buf_line]].modified and modified_byteidx or 1)
 		current_extid = api.nvim_buf_set_extmark(scratch_buf, ns_id, current_buf_line - 1, byteidx, {
 			end_col = #bufs_names[current_buf_line],
 			hl_group = "BufferListCurrentBuffer",
