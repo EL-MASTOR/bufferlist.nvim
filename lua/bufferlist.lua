@@ -16,6 +16,9 @@ local default_opts = {
 		close_buf_prefix = "c",
 		force_close_buf_prefix = "f",
 		save_buf = "s",
+		visual_close = "d",
+		visual_force_close = "f",
+		visual_save = "s",
 		multi_close_buf = "m",
 		multi_save_buf = "w",
 		save_all_unsaved = "a",
@@ -224,6 +227,30 @@ local function toggle_path(the_relative_paths, static)
 	vim.bo[the_scratch_buf].modifiable = false
 end
 
+---@param fun function
+---@param third_arg boolean|table
+---@param the_listed_bufs table
+---@param win number
+---@param refresh_fn function
+local function multi_visual(fun, third_arg, the_listed_bufs, win, refresh_fn)
+	local start = fn.line("v", win)
+	local theEnd = fn.line(".", win)
+	if start > theEnd then
+		start, theEnd = theEnd, start
+	end
+	for i = start, theEnd do
+		if third_arg == false and bo[the_listed_bufs[i]].modified then -- refresh_fn ~=nil then -- because third_ard is a boolean, we now it's a close operation, so refresh_fn check isn't needed.
+			goto continue
+		end
+		fun(the_listed_bufs, i, third_arg)
+		::continue::
+	end
+	if refresh_fn ~= nil then
+		refresh_fn()
+		fn.setcursorcharpos(start, 6)
+	end
+end
+
 local function list_buffers()
 	local b = api.nvim_list_bufs()
 	local scratch_buf = api.nvim_create_buf(false, true)
@@ -273,6 +300,7 @@ local function list_buffers()
 			end, km_opts(scratch_buf, "switch to buffer:" .. desc_bufname))
 
 			km.set("n", default_opts.keymap.close_buf_prefix .. tostring(len), function()
+				-- TODO: try to reduce duplication by including this modification check in vlose_buffer, and test all the close operations afterwards.
 				if not bo[listed_bufs[len]].modified then
 					close_buffer(listed_bufs, len)
 					refresh()
@@ -317,7 +345,14 @@ local function list_buffers()
 		api.nvim_buf_add_highlight(scratch_buf, ns_id, "BufferListLine", i - 1, byteidx, byteidx + line_byteidx)
 		if icon_colors[i] then
 			local hl_group = "BufferListIcon" .. tostring(i)
-			api.nvim_buf_add_highlight(scratch_buf, ns_id, hl_group, i - 1, byteidx + line_byteidx, byteidx + line_byteidx + 4)
+			api.nvim_buf_add_highlight(
+				scratch_buf,
+				ns_id,
+				hl_group,
+				i - 1,
+				byteidx + line_byteidx,
+				byteidx + line_byteidx + 4
+			)
 			cmd("hi " .. hl_group .. " guifg=" .. icon_colors[i])
 		end
 	end
@@ -433,6 +468,23 @@ local function list_buffers()
 			wkm[2]({ bl_buf = scratch_buf, buffers = listed_bufs, winid = win, open_bufferlist = list_buffers })
 		end, keymap_opts)
 	end
+
+	km.set("n", "v", "V", km_opts(scratch_buf, "start visual lines mode"))
+
+	--Visual save
+	km.set("v", default_opts.keymap.visual_save, function()
+		multi_visual(save_buffer, scratch_buf, listed_bufs, win)
+	end, km_opts(scratch_buf, "multi-save visual lines"))
+
+	-- Visual close
+	km.set("v", default_opts.keymap.visual_close, function()
+		multi_visual(close_buffer, false, listed_bufs, win, refresh)
+	end, km_opts(scratch_buf, "multi-close visual lines"))
+
+	-- Visual force close
+	km.set("v", default_opts.keymap.visual_force_close, function()
+		multi_visual(close_buffer, true, listed_bufs, win, refresh)
+	end, km_opts(scratch_buf, "force multi-close visual lines"))
 end
 
 ---@param opts table

@@ -17,6 +17,10 @@
   - [Closing multiple buffers](#closing-multiple-buffers)
   - [Force closing multiple buffers](#force-closing-multiple-buffers)
   - [Saving multiple buffers](#saving-multiple-buffers)
+  - [Visual mode support](#visual-mode-support)
+    -[Visual multi-closing](#visual-multi-closing)
+    -[Visual force multi-closing](#visual-force-multi-closing)
+    -[Visual multi-saving](#visual-multi-saving)
   - [Toggle or show relative path](#toggle-or-show-relative-path)
     - [Toggle relative path](#toggle-relative-path)
     - [Show relative path](#show-relative-path)
@@ -31,19 +35,21 @@
   - [Feedback](#feedback)
 
 ## Features
- - Manage buffers (**list, switch, save, close, multi-(save,close)**)
- - Super lightweight (**all the code is in a single file**)
- - Super fast, (*since the code base is very small*) 
- - Super easy to use, (**_you can list, switch and manage buffers with as few key strokes as possible_**)
- - Highlights the buffer lines as you write them in the prompt
- - Custom keymaps
- - Save all unsaved
- - Close all saved
- - Show or toggle relative path
- - Buffer unsaved icon
- - Support for diagnostics
- - Responsive height
- - Not gluted with unnecessary features. (**_BufferList comes only with features that you would use_**)
+ - Manage buffers (**list, switch, save, close, multi-(save,close)**).
+ - Super lightweight (**all the code is in a single file**).
+ - Super fast, (*since the code base is very small*).
+ - Super easy to use, (**_you can list, switch and manage buffers with as few key strokes as possible_**).
+ - Highlights the buffer lines as you write them in the prompt.
+ - Custom keymaps.
+ - Save all unsaved.
+ - Close all saved.
+ - multi-(close/save)ing.
+ - Visual mode support. **(2nd method of multi-(save/close)ing.)**
+ - Show or toggle relative path.
+ - Buffer unsaved icon.
+ - Support for diagnostics.
+ - Responsive height.
+ - Not gluted with unnecessary features. (**_BufferList comes only with features that you would use._**)
 
 ## Installation
 
@@ -80,13 +86,16 @@ Bufferlist comes with the following defaults:
   keymap = {
     close_buf_prefix = "c",
     force_close_buf_prefix = "f",
-    save_buf = "s", 
+    save_buf = "s",
+    visual_close = "d",
+    visual_force_close = "f",
+    visual_save = "s",
     multi_close_buf = "m",
     multi_save_buf = "w",
     save_all_unsaved = "a",
     close_all_saved = "d0",
     toggle_path = "p",
-    close_bufferlist = "q" 
+    close_bufferlist = "q",
   },
   win_keymaps = {}, -- add keymaps to the BufferList window
   bufs_keymaps = {}, -- add keymaps to each line number in the BufferList window
@@ -138,11 +147,25 @@ Press `keymap.multi_close_buf` to show a prompt, and then enter the `<line_numbe
 
 ### Force closing multiple buffers
 Press `keymap.multi_close_buf` and then enter `!` at the very beginning of the prompt, and then carry on with the rest of the steps already described in [Closing multiple buffers](#closing-multiple-buffers)
-    
+
 >❗️*Make sure that `!` is the very first character in the prompt, it shouldn't be preceded by anything, otherwise it would behave just like [Closing multiple buffers](#closing-multiple-buffers)*
 
 ### Saving multiple buffers
 Press `keymap.multi_save_buf` and then enter all the `<line_number>`s of the buffers you want to save seperated by a seperator. The seperator has the same characteristics described in [Closing multiple buffers](#closing-multiple-buffers)
+
+### Visual mode support
+You can also (save/close) multiple buffers by just selecting their lines in visual mode. This is convenient in some cases compared to the other method of multi-(close/save)ing described in the above sections.
+
+#### Visual multi-closing
+Select the lines of buffers you want to close in visual mode and press `keymap.visual_close`.
+
+> Unsaved buffers are ignored.
+
+#### Visual force multi-closing
+To include unsaved buffers in visual multi-closing, you need to press `keymap.visual_force_close` instead.
+
+#### Visual multi-saving
+Press `keymap.visual_save` in visual mode to save all the buffers in the selected lines.
 
 ### Toggle or show relative path
 >❗️*This uses the output captured from [realpath](https://www.gnu.org/software/coreutils/realpath) if it exists*
