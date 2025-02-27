@@ -65,7 +65,7 @@ end
 ---@return nil
 local function close_buffer(listed_bufs, index, force)
 	local bn = listed_bufs[index]
-	if bo[bn].buftype == "terminal" and not force then
+	if (bo[bn].modified or bo[bn].buftype == "terminal") and force ~= true then
 		return nil
 	end
 	local command = (force and "bd! " or "bd ") .. bn
@@ -174,12 +174,8 @@ local function float_prompt(win, height, listed_buffers, scratch_buffer, save_or
 				save_buffer(listed_buffers, tonumber(key), scratch_buffer)
 			elseif save_or_close == "close" then
 				local force = string.sub(api.nvim_buf_get_lines(0, 0, -1, true)[1], 1, 1) == "!"
-				if not force and bo[listed_buffers[tonumber(key)]].modified then
-					goto continue
-				end
 				close_buffer(listed_buffers, tonumber(key), force)
 			end
-			::continue::
 		end
 		cmd("stopinsert")
 		cmd("bwipeout " .. prompt_scratch_buf)
@@ -228,7 +224,7 @@ local function toggle_path(the_relative_paths, static)
 end
 
 ---@param fun function
----@param third_arg boolean|table
+---@param third_arg boolean|integer
 ---@param the_listed_bufs table
 ---@param win number
 ---@param refresh_fn function
@@ -239,11 +235,7 @@ local function multi_visual(fun, third_arg, the_listed_bufs, win, refresh_fn)
 		start, theEnd = theEnd, start
 	end
 	for i = start, theEnd do
-		if third_arg == false and bo[the_listed_bufs[i]].modified then -- refresh_fn ~=nil then -- because third_ard is a boolean, we now it's a close operation, so refresh_fn check isn't needed.
-			goto continue
-		end
 		fun(the_listed_bufs, i, third_arg)
-		::continue::
 	end
 	if refresh_fn ~= nil then
 		refresh_fn()
@@ -300,9 +292,8 @@ local function list_buffers()
 			end, km_opts(scratch_buf, "switch to buffer:" .. desc_bufname))
 
 			km.set("n", default_opts.keymap.close_buf_prefix .. tostring(len), function()
-				-- TODO: try to reduce duplication by including this modification check in vlose_buffer, and test all the close operations afterwards.
+				close_buffer(listed_bufs, len)
 				if not bo[listed_bufs[len]].modified then
-					close_buffer(listed_bufs, len)
 					refresh()
 				end
 			end, km_opts(scratch_buf, "close buffer:" .. desc_bufname))
@@ -448,9 +439,7 @@ local function list_buffers()
 
 	km.set("n", default_opts.keymap.close_all_saved, function()
 		for index = 1, #listed_bufs do
-			if not bo[listed_bufs[index]].modified then
-				close_buffer(listed_bufs, index)
-			end
+			close_buffer(listed_bufs, index)
 		end
 		refresh()
 	end, km_opts(scratch_buf, "close all saved buffers"))
