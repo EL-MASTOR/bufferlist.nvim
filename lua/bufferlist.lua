@@ -325,6 +325,12 @@ local function list_buffers()
 		end
 	end
 
+	if #bufs_names == 0 then
+		vim.notify("You don't have any loaded buffers", vim.log.levels.INFO)
+		api.nvim_buf_delete(scratch_buf, { force = true })
+		return
+	end
+
 	api.nvim_buf_set_lines(scratch_buf, 0, 1, true, bufs_names)
 
 	for i = 1, #bufs_names do
@@ -397,12 +403,6 @@ local function list_buffers()
 	local height = #bufs_names
 	local row = math.floor((vim.go.lines - height) / 2)
 	local column = math.floor((vim.go.columns - default_opts.width) / 2)
-
-	if height == 0 then
-		-- Cleanup buffer on exit
-		api.nvim_buf_delete(scratch_buf, { force = true })
-		return
-	end
 
 	local win = api.nvim_open_win(scratch_buf, true, {
 		relative = "editor",
