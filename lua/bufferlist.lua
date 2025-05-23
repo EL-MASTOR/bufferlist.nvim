@@ -296,6 +296,15 @@ local function list_buffers()
 				end
 			end, km_opts(scratch_buf, "switch to buffer under cursor"))
 
+			km.set("n", "x", function()
+				local cursor_line = fn.line(".")
+				local bufnr = listed_bufs[cursor_line]
+				if bufnr and api.nvim_buf_is_valid(bufnr) then
+					close_buffer(listed_bufs, cursor_line)
+					refresh()
+				end
+			end, km_opts(scratch_buf, "close buffer under cursor"))
+
 			km.set("n", tostring(len), function()
 				cmd("bwipeout | buffer " .. listed_bufs[len])
 			end, km_opts(scratch_buf, "switch to buffer:" .. desc_bufname))
