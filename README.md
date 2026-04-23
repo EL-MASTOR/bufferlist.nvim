@@ -107,6 +107,7 @@ Bufferlist comes with the following defaults:
     modified = "󰝥",
   },
   win_opts = {}, -- set local vim opts of BufferList window
+  start_cursor_on_buf_line = true, -- set this to true if you want the cursor to start on the line of the currently opened buffer
   top_prompt = true, -- set this to false if you want the prompt to be at the bottom of the window instead of on top of it.
   show_path = false, -- show the relative paths the first time BufferList window is opened
 }

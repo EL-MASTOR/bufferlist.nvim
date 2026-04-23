@@ -36,6 +36,7 @@ local default_opts = {
 		save_prompt = "󰆓 ",
 	},
 	win_opts = {},
+	start_cursor_on_buf_line = true,
 	top_prompt = true,
 	show_path = false,
 }
@@ -259,8 +260,10 @@ local function list_buffers()
 	local modified_byteidx = fn.byteidx(default_opts.icons.modified, 1)
 
 	local function refresh()
+		local store_cursor_line = unpack(api.nvim_win_get_cursor(0))
 		cmd("bwipeout")
 		list_buffers()
+		fn.setcursorcharpos(store_cursor_line, 6)
 	end
 
 	for i = 1, #b do
@@ -421,7 +424,11 @@ local function list_buffers()
 	vim.wo[win].number = true
 	bo[scratch_buf].modifiable = false
 
-	fn.setcursorcharpos(1, 6)
+	if default_opts.start_cursor_on_buf_line then
+		fn.setcursorcharpos(tostring(current_buf_line or 1), 6)
+	else
+		fn.setcursorcharpos(1, 6)
+	end
 
 	for key, value in pairs(default_opts.win_opts) do
 		vim.wo[win][key] = value
