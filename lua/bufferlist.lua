@@ -35,6 +35,7 @@ local default_opts = {
 		prompt = "",
 		save_prompt = "󰆓 ",
 	},
+	win_opts = {},
 	top_prompt = true,
 	show_path = false,
 }
@@ -421,6 +422,10 @@ local function list_buffers()
 	bo[scratch_buf].modifiable = false
 
 	fn.setcursorcharpos(1, 6)
+
+	for key, value in pairs(default_opts.win_opts) do
+		vim.wo[win][key] = value
+	end
 
 	km.set("n", default_opts.keymap.close_bufferlist, function()
 		cmd("bwipeout")
