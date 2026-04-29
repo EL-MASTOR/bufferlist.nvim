@@ -106,6 +106,8 @@ Bufferlist comes with the following defaults:
     line = "▎",
     modified = "󰝥",
   },
+  win_opts = {}, -- set local vim opts of BufferList window
+  start_cursor_on_buf_line = true, -- set this to true if you want the cursor to start on the line of the currently opened buffer
   top_prompt = true, -- set this to false if you want the prompt to be at the bottom of the window instead of on top of it.
   show_path = false, -- show the relative paths the first time BufferList window is opened
 }
@@ -177,6 +179,17 @@ press `keymap.toggle_path` to toggle the relative path to each buffer from the n
 
 #### Show relative path
 set `show_path` to `true` to show the relative path the first time you open the BufferList window after it has been loaded.
+
+### Adding custom window opts
+You can add custom local opts for BufferList window via `win_opts` option. `win_opts` takes a table of `key = value` items. You can see a list of available options by running `:help option-summary`, any option marked as local can be set.
+
+This example shows how to set window opts to highlight the cursor line of BufferList window:
+```lua
+win_opts = {
+    cursorline = true,
+    cursorlineopts = "line",
+},
+```
 
 ### Adding custom keymaps
 You can add custom keymaps for BufferList window via `win_keymaps` option, and keymaps for buffers via `bufs_keymaps` option
